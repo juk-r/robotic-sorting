@@ -1,0 +1,61 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "map": {
+            "description": "Path to map.json",
+            "type": "string"
+        },
+        "robotTypes": {
+            "description": "Robot types presented in this state",
+            "type": "array",
+            "items": {
+                "description": "Path to robotType.json",
+                "type": "string"
+            }
+        },
+        "robots": {
+            "description": "",
+            "type": "array",
+            "items": {
+                "description": "",
+                "type": "object",
+                "oneOf": [
+                    {
+                        "properties": {
+                            "robotType": {
+                                "description": "Robot type specified in robotTypes",
+                                "type": "string"
+                            }
+                        },
+                        "required": ["robotTypes"]
+                    },
+                    {
+                        "$ref": "robot-type-v1-schema.json"
+                    }
+                ],
+                "properties": {
+                    "position": {
+                        "description": "Position of robot [x, y]",
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                            "type": "integer"
+                        }
+                    },
+                    "direction": {
+                        "description": "Direction of robot",
+                        "enum": ["up", "left", "down", "right"]
+                    },
+                    "charge": {
+                        "description": "Charge of robot from 0 to 1",
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                    }
+                }
+            }
+        }
+    }
+}

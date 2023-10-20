@@ -1,0 +1,51 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "title": {
+            "type": "string"
+        },
+        "description": {
+            "type": "string"
+        },
+        "cells": {
+            "description": "2d array of cells",
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {
+                    "$ref": "#/$defs/cell"
+                },
+                "minItems": 1
+            },
+            "minItems": 1
+        }
+    },
+    "required": ["cells"],
+    "$defs": {
+        "cell": {
+            "description": "One cell on the map",
+            "type": "object",
+            "default": {},
+            "properties": {
+                "free": {
+                    "description": "Indicates if robot can be on this cell, default - true",
+                    "type": "boolean",
+                    "default": true
+                },
+                "inputId": {
+                    "description": "Id of input source of mails",
+                    "type": "integer"
+                },
+                "outputId": {
+                    "description": "Id of output source of mails",
+                    "type": "integer"
+                },
+                "chargeId": {
+                    "description": "Id of charge station",
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}
