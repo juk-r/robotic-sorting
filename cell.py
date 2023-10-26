@@ -22,17 +22,33 @@ class Cell(simpy.Resource):
     def charge_id(self):
         return self._charge_id
 
+    @typing.overload
+    def __init__(self, env: simpy.Environment,
+                 get_mail_input: None = None,
+                 input_id: None = None,
+                 output_id: int | None = None,
+                 charge_id: int | None = None,
+                 free: bool = True) -> None: ...
+    @typing.overload
     def __init__(self, env: simpy.Environment,
                  get_mail_input: MailInputGetter,
-                 free: bool = True,
                  input_id: int | None = None,
                  output_id: int | None = None,
-                 charge_id: int | None = None):
+                 charge_id: int | None = None,
+                 free: bool = True) -> None: ...
+    def __init__(self, env: simpy.Environment,
+                 get_mail_input: MailInputGetter | None = None,
+                 input_id: int | None = None,
+                 output_id: int | None = None,
+                 charge_id: int | None = None,
+                 free: bool = True):
         super().__init__(env)
         self._env = env
         self._free = free
         self._input_id = input_id
         if input_id is not None:
+            if get_mail_input is None:
+                raise TypeError("No get_mail_input")
             self._input = get_mail_input(input_id)
         else:
             self._input = None
