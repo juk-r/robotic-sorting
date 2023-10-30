@@ -21,7 +21,11 @@ class Robot:
         turn_to_left = 11
         turn_to_down = 12
         turn_to_right = 13
-    
+
+        @staticmethod
+        def turn_to(direction: Direction):
+            return Robot.Action(10 + direction.value)
+
     @property
     def position(self):
         return self._position
@@ -34,11 +38,11 @@ class Robot:
     @property
     def mail(self):
         return self._mail
-    
-    def __init__(self, env: simpy.Environment, 
+
+    def __init__(self, env: simpy.Environment,
                  type_: RobotType,
                  brain: "Brain",
-                 position: Position, 
+                 position: Position,
                  direction: Direction,
                  charge: float):
         self._env = env
@@ -47,35 +51,53 @@ class Robot:
         self._position = position
         self._direction = direction
         self._charge = charge
-        
-        
+
         self._cell_request = self._brain.map[position].request()
         self._action = env.process(self._run())
-        
+
         self._mail: Mail | None = None
         self._start_charge_time: simpy.core.SimTime | None = None
-        self._event: simpy.Event | None = None
-    
-    
-        
-    def _idle(self):
-        self._event = self._env.event()
-        yield self._event
-        self._event = None
+        self._event: simpy.Event = env.event()
+        self._aborted = False
 
-    def _move(self):
+    def _new_abortable_event(self, event: simpy.Event | None = None):
+        def cancel_event(evt: simpy.Event):
+            if not self._event.triggered:
+                self._event.succeed(evt.value)
+                self._aborted = False
+        self._event = self._env.event()
+        if event is not None:
+            event.callbacks.append(cancel_event)
+        return self._event
+
+    def abort(self):
+        if self._event.triggered:
+            return False
+        self._event.succeed()
+        self._aborted = True
+        return True
+
+    def _idle(self):
+        yield self._new_abortable_event()
+
+    def _move(self) -> typing.Generator[simpy.Event, bool, None]:
         next_position = self._position.get_next_on(self._direction)
         request = self._brain.map[next_position].request()
-        yield request
+        yield self._new_abortable_event(request)
+        if self._aborted:
+            return
         yield self._env.timeout(self._type.time_to_move)
         self._brain.map[self._position].release(self._cell_request)
         self._position = next_position
         self._cell_request = request
-        
+
     def _take(self) -> typing.Generator[simpy.Event, Mail, None]:
         if self._mail is not None:
             raise RobotWithMailException(self)
-        self._mail: Mail | None = yield self._brain.map[self._position].get_input()
+        self._mail = yield self._new_abortable_event(
+            self._brain.map[self._position].get_input())
+        if self._aborted:
+            return
         yield self._env.timeout(self._type.time_to_take)
 
     def _put(self):
@@ -84,12 +106,17 @@ class Robot:
         self._mail = None
         yield self._env.timeout(self._type.time_to_put)
 
+    @property
+    def time_to_full_charge(self):
+        return 100*(1-self._charge)
+
+    def get_charge_after(self, charge_time: float) -> float:
+        return min(1, self._charge + 0.01*charge_time)
+
     def _do_charge(self):
         start_time = self._env.now
-        self._event = self._env.event()
-        yield self._event | self._env.timeout(100*(1-self._charge))
-        self._event = None
-        self._charge = min(1, self._charge + 0.01*(self._env.now-start_time))
+        yield self._new_abortable_event(self._env.timeout(self.time_to_full_charge))
+        self._charge = self.get_charge_after(self._env.now - start_time)
 
     def _turn(self, new_direction: Direction):
         yield self._env.timeout(Direction.turn_count(self._direction, new_direction)\
@@ -113,4 +140,3 @@ class Robot:
                 case Robot.Action.turn_to_up | Robot.Action.turn_to_left\
                         | Robot.Action.turn_to_down | Robot.Action.turn_to_right as turn:
                     yield self._env.process(self._turn(Direction(turn.value-10)))
-    

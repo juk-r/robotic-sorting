@@ -8,6 +8,11 @@
         "description": {
             "type": "string"
         },
+        "span": {
+            "description": "Distance between 2 cells",
+            "type": "number",
+            "exclusiveMinimum": 0
+        },
         "cells": {
             "description": "2d array of cells",
             "type": "array",
@@ -21,7 +26,7 @@
             "minItems": 1
         }
     },
-    "required": ["cells"],
+    "required": ["span", "cells"],
     "$defs": {
         "cell": {
             "description": "One cell on the map",

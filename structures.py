@@ -1,4 +1,5 @@
 import enum
+import typing
 
 from exceptions import PositionOutOfMapException, NotRectangleMapException
 from cell import Cell
@@ -8,11 +9,11 @@ class Mail:
     def id(self): return self._id
     @property
     def destination(self): return self._destination
-    
+
     def __init__(self, id: int, destination: int):
         self._id = id
         self._destination = destination
-        
+
     def __str__(self):
         return f"Mail#{self._id} to {self._destination}"
 
@@ -22,7 +23,7 @@ class Direction(enum.Enum):
     left = 1
     down = 2
     right = 3
-    
+
     @staticmethod
     def turn_count(a: "Direction", b: "Direction"):
         cnt = abs(a.value - b.value)
@@ -32,6 +33,10 @@ class Direction(enum.Enum):
             case 2: return 2
             case 3: return 1
             case _: return 0
+
+    @property
+    def inverse(self):
+        return Direction((self.value + 2) % 4)
 
 
 class Position:
@@ -43,10 +48,10 @@ class Position:
     def __init__(self, x: int, y: int):
         self._x = x
         self._y = y
-    
+
     def __str__(self):
         return f"({self._x}, {self._y})"
-    
+
     def get_next_on(self, direction: Direction):
         match direction:
             case Direction.up:
@@ -58,9 +63,30 @@ class Position:
             case Direction.right:
                 return Position(self._x, self._y + 1)
 
+    def __eq__(self, other: "Position"): # type: ignore
+        return self._x == other._x and self._y == other._y
 
-class Map:
-    def __init__(self, map_: list[list[Cell]]):
+
+TCell = typing.TypeVar("TCell", bound=Cell, covariant=True)
+
+class GenericMap(typing.Generic[TCell]):
+    @property
+    def inputs(self):
+        return self._inputs
+    @property
+    def outputs(self):
+        return self._outputs
+    @property
+    def charges(self):
+        return self._charges
+    @property
+    def n(self):
+        return self._n
+    @property
+    def m(self):
+        return self._m
+
+    def __init__(self, map_: typing.Sequence[typing.Sequence[TCell]]):
         self._map = map_
         self._n = len(map_)
         if self._n == 0:
@@ -68,16 +94,37 @@ class Map:
         self._m = len(map_[0])
         if self._m == 0:
             raise NotRectangleMapException()
-        for line in self._map:
+        self._inputs: dict[int, Position] = {}
+        self._outputs: dict[int, Position] = {}
+        self._charges: dict[int, Position] = {}
+        for x, line in enumerate(self._map):
             if len(line) != self._m:
                 raise NotRectangleMapException()
+            for y, cell in enumerate(line):
+                if cell.input_id is not None:
+                    self._inputs[cell.input_id] = Position(x, y)
+                if cell.output_id is not None:
+                    self._outputs[cell.output_id] = Position(x, y)
+                if cell.charge_id is not None:
+                    self._charges[cell.charge_id] = Position(x, y)
 
-    def __getitem__(self, position: Position):
+        self.input_ids = tuple(self._inputs.keys())
+        self.output_ids = tuple(self._inputs.keys())
+        self.charge_ids = tuple(self._inputs.keys())
+
+    @typing.overload
+    def __getitem__(self, position: Position) -> TCell:...
+    @typing.overload
+    def __getitem__(self, position: tuple[int, int]) -> TCell:...
+    def __getitem__(self, position: Position | tuple[int, int]):
+        if isinstance(position, tuple):
+            position = Position(position[0], position[1])
         if position.x < 0 or position.x >= self._n\
                 or position.y < 0 or position.y >= self._m:
             raise PositionOutOfMapException(position)
         return self._map[position.x][position.y]
-    
+
+Map = GenericMap[Cell]
 
 class RobotType:
     @property
@@ -88,11 +135,11 @@ class RobotType:
     def time_to_put(self): return self._time_to_put
     @property
     def time_to_take(self): return self._time_to_take
-    
-    def __init__(self, 
-                 time_to_move: int, 
-                 time_to_turn: int, 
-                 time_to_put: int, 
+
+    def __init__(self,
+                 time_to_move: int,
+                 time_to_turn: int,
+                 time_to_put: int,
                  time_to_take: int):
         self._time_to_move = time_to_move
         self._time_to_turn = time_to_turn
