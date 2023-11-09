@@ -1,4 +1,5 @@
 import enum
+import logging
 import simpy
 import typing
 
@@ -80,20 +81,25 @@ class Robot:
 
     def abort(self):
         if self._event.triggered:
+            logging.warn(f"Tried to abort {self}'s event.", self._env.now)
             return False
+        logging.info(f"{self}'s event aborted.", self._env.now)
         self._event.succeed()
         self._aborted = True
         return True
 
     def _idle(self):
+        logging.info(f"{self} is idle.", self._env.now)
         yield self._new_abortable_event()
 
     def _move(self) -> typing.Generator[simpy.Event, bool, None]:
         next_position = self._position.get_next_on(self._direction)
         request = self._brain.map[next_position].request()
+        logging.info(f"{self} is waiting for {next_position} to free.", self._env.now)
         yield self._new_abortable_event(request)
         if self._aborted:
             return
+        logging.info(f"{self} is moving to {next_position}.", self._env.now)
         yield self._env.timeout(self._type.time_to_move)
         self._brain.map[self._position].release(self._cell_request)
         self._position = next_position
@@ -102,15 +108,18 @@ class Robot:
     def _take(self) -> typing.Generator[simpy.Event, Mail, None]:
         if self._mail is not None:
             raise RobotWithMailException(self)
+        logging.info(f"{self} is waiting for mail.", self._env.now)
         self._mail = yield self._new_abortable_event(
             self._brain.map[self._position].get_input())
         if self._aborted:
             return
+        logging.info(f"{self} is taking {self._mail}.", self._env.now)
         yield self._env.timeout(self._type.time_to_take)
 
     def _put(self):
         if self._mail is None:
             raise RobotWithoutMailException(self)
+        logging.info(f"{self} is putting {self._mail}.")
         self._mail = None
         yield self._env.timeout(self._type.time_to_put)
 
@@ -121,12 +130,15 @@ class Robot:
     def get_charge_after(self, charge_time: float) -> float:
         return min(1, self._charge + 0.01*charge_time)
 
-    def _do_charge(self):
+    def _do_charge(self) -> typing.Generator[simpy.Event, None, None]:
+        raise NotImplementedError()
         start_time = self._env.now
+        logging.log(f"{self} is charging.")
         yield self._new_abortable_event(self._env.timeout(self.time_to_full_charge))
         self._charge = self.get_charge_after(self._env.now - start_time)
 
     def _turn(self, new_direction: Direction):
+        logging.info(f"{self} is turning to {new_direction}.")
         yield self._env.timeout(Direction.turn_count(self._direction, new_direction)\
                           * self._type.time_to_turn)
         self._direction = new_direction
