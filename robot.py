@@ -50,7 +50,8 @@ class Robot:
                  brain: "Brain",
                  position: Position,
                  direction: Direction,
-                 charge: float):
+                 charge: float,
+                 wait_time: float = -1):
         self._id = Robot._last_robot_id
         Robot._last_robot_id += 1
 
@@ -60,6 +61,7 @@ class Robot:
         self._position = position
         self._direction = direction
         self._charge = charge
+        self.wait_time = wait_time
 
         self._cell_request = self._brain.map[position].request()
         self._action = env.process(self._run())
@@ -96,8 +98,17 @@ class Robot:
         next_position = self._position.get_next_on(self._direction)
         request = self._brain.map[next_position].request()
         logging.info(f"{self} is waiting for {next_position} to free.", self._env.now)
-        yield self._new_abortable_event(request)
+        if self.wait_time > 0:
+            timeout_event = self._env.timeout(self.wait_time)
+            yield self._new_abortable_event(request) | timeout_event
+            timeout = timeout_event.triggered
+        else:
+            yield self._new_abortable_event(request)
+            timeout = False
         if self._aborted:
+            return
+        if timeout:
+            logging.info(f"{self} waited too much ({self.wait_time}).")
             return
         logging.info(f"{self} is moving to {next_position}.", self._env.now)
         yield self._env.timeout(self._type.time_to_move)
