@@ -26,6 +26,8 @@ class Robot:
         def turn_to(direction: Direction):
             return Robot.Action(10 + direction.value)
 
+    _last_robot_id: int = 0
+
     @property
     def position(self):
         return self._position
@@ -38,6 +40,9 @@ class Robot:
     @property
     def mail(self):
         return self._mail
+    @property
+    def id(self):
+        return self._id
 
     def __init__(self, env: simpy.Environment,
                  type_: RobotType,
@@ -45,6 +50,9 @@ class Robot:
                  position: Position,
                  direction: Direction,
                  charge: float):
+        self._id = Robot._last_robot_id
+        Robot._last_robot_id += 1
+
         self._env = env
         self._type = type_
         self._brain = brain
@@ -140,3 +148,7 @@ class Robot:
                 case Robot.Action.turn_to_up | Robot.Action.turn_to_left\
                         | Robot.Action.turn_to_down | Robot.Action.turn_to_right as turn:
                     yield self._env.process(self._turn(Direction(turn.value-10)))
+
+    @typing.override
+    def __str__(self):
+        return f"Robot#{self._id}"
