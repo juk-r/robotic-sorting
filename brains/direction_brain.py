@@ -1,3 +1,4 @@
+import typing
 import simpy
 import collections
 
@@ -22,6 +23,7 @@ class DirectionBrain(Brain):
         self._last += 1
         return self._map.input_ids[self._last % len(self._map.input_ids)]
     
+    @typing.override
     def get_next_action(self, robot: Robot) -> Robot.Action:
         if robot.mail is not None:
             if robot.position == self._map.outputs[robot.mail.destination]:

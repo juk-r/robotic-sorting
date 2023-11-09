@@ -1,4 +1,5 @@
 import dataclasses
+import typing
 import simpy
 
 from structures import Mail
@@ -16,6 +17,7 @@ class MailFromLog(MailFactory):
         super().__init__(env)
         self._log = sorted(log, key=lambda m: m.input_time)
 
+    @typing.override
     def _putter(self):
         time = self._env.now
         for mail in self._log:

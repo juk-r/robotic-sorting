@@ -55,6 +55,7 @@ class Cell(simpy.Resource):
         self._output_id = output_id
         self._charge_id = charge_id
 
+    @typing.override
     def request(self):
         if not self._free:
             raise NotFreeCellException(self)

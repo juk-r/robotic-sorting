@@ -26,6 +26,7 @@ class RandomMail(MailFactory):
         else:
             self._destination = lambda: random.choice(destination)
 
+    @typing.override
     def _putter(self):
         while True:
             yield self._env.timeout(self._time_span())

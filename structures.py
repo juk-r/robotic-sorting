@@ -14,6 +14,7 @@ class Mail:
         self._id = id
         self._destination = destination
 
+    @typing.override
     def __str__(self):
         return f"Mail#{self._id} to {self._destination}"
 
@@ -49,6 +50,7 @@ class Position:
         self._x = x
         self._y = y
 
+    @typing.override
     def __str__(self):
         return f"({self._x}, {self._y})"
 

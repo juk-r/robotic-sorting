@@ -16,6 +16,7 @@ class RandomAlwaysReadyMail(MailFactory):
             self._destination = lambda: random.choice(destination)
         self._last_id = 0
 
+    @typing.override
     def __call__(self, input_id: int):
         return lambda: self._get_mail(input_id)
 
@@ -24,5 +25,6 @@ class RandomAlwaysReadyMail(MailFactory):
         self._last_id += 1
         return self._stores[input_id].get()
 
+    @typing.override
     def _putter(self):
         yield self._env.timeout(0)
