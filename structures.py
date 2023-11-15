@@ -18,6 +18,10 @@ class Mail:
     def __str__(self):
         return f"Mail#{self._id} to {self._destination}"
 
+    @typing.override
+    def __hash__(self):
+        return self._id
+
 
 class Direction(enum.Enum):
     up = 0
@@ -67,6 +71,10 @@ class Position:
 
     def __eq__(self, other: "Position"): # type: ignore
         return self._x == other._x and self._y == other._y
+
+    @typing.override
+    def __hash__(self):
+        return hash((self._x, self._y))
 
 
 TCell = typing.TypeVar("TCell", bound=Cell, covariant=True)
