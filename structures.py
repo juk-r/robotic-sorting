@@ -123,8 +123,8 @@ class GenericMap(typing.Generic[TCell]):
         self.charge_ids = tuple(self._inputs.keys())
 
     def has(self, position: Position):
-        return (position.x > 0 and position.x < self._n
-                and position.y > 0 and position.y < self._m)
+        return (position.x >= 0 and position.x < self._n
+                and position.y >= 0 and position.y < self._m)
 
     @typing.overload
     def __getitem__(self, position: Position) -> TCell:...
