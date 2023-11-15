@@ -114,6 +114,10 @@ class GenericMap(typing.Generic[TCell]):
         self.output_ids = tuple(self._inputs.keys())
         self.charge_ids = tuple(self._inputs.keys())
 
+    def has(self, position: Position):
+        return (position.x > 0 and position.x < self._n
+                and position.y > 0 and position.y < self._m)
+
     @typing.overload
     def __getitem__(self, position: Position) -> TCell:...
     @typing.overload
@@ -121,8 +125,7 @@ class GenericMap(typing.Generic[TCell]):
     def __getitem__(self, position: Position | tuple[int, int]):
         if isinstance(position, tuple):
             position = Position(position[0], position[1])
-        if position.x < 0 or position.x >= self._n\
-                or position.y < 0 or position.y >= self._m:
+        if not self.has(position):
             raise PositionOutOfMapException(position)
         return self._map[position.x][position.y]
 
