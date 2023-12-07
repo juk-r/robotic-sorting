@@ -1,9 +1,6 @@
 {
     "$schema": "schemas/map-v1-schema.json",
-<<<<<<< HEAD
     "span": 1,
-=======
->>>>>>> 64bd59b (Add schemas and 1 map)
     "cells": [
         [
             {"chargeId": 0},

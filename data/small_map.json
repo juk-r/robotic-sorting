@@ -1,0 +1,21 @@
+{
+    "$schema": "schemas/map-v1-schema.json",
+    "span": 1,
+    "cells": [
+        [
+            {"inputId": 0},
+            {},
+            {"inputId": 1}
+        ],
+        [
+            {},
+            {},
+            {}
+        ],
+        [
+            {"outputId": 0},
+            {},
+            {"outputId": 1}
+        ]
+    ]
+}

@@ -28,7 +28,7 @@ class Brain(abc.ABC):
         if robot.mail is not None:
             if robot.position == self._map.outputs[robot.mail.destination]:
                 self._mail_put(robot)
-                self._count += 0
+                self._count += 1
                 return Robot.Action.put
             return self._go_with_mail(robot, robot.mail.destination)
         else:

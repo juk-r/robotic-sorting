@@ -119,8 +119,8 @@ class GenericMap(typing.Generic[TCell]):
                     self._charges[cell.charge_id] = Position(x, y)
 
         self.input_ids = tuple(self._inputs.keys())
-        self.output_ids = tuple(self._inputs.keys())
-        self.charge_ids = tuple(self._inputs.keys())
+        self.output_ids = tuple(self._outputs.keys())
+        self.charge_ids = tuple(self._charges.keys())
 
     def has(self, position: Position):
         return (position.x >= 0 and position.x < self._n

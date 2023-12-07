@@ -2,7 +2,7 @@ import typing
 import simpy
 import collections
 
-from brain import Brain
+from brains.brain import Brain
 from robot import Robot
 
 if typing.TYPE_CHECKING:
@@ -14,7 +14,7 @@ class DirectionBrain(Brain):
     def __init__(self, env: simpy.Environment, map_: "DirectionMap"):
         super().__init__(env, map_)
         self._map: DirectionMap
-        self._destinations = collections.defaultdict[Robot, int](
+        self._input_destinations = collections.defaultdict[Robot, int](
             lambda: self._next_input(None))
         self._last = 0
 
@@ -37,4 +37,4 @@ class DirectionBrain(Brain):
 
     @typing.override
     def _mail_put(self, robot: Robot):
-        self._destinations[robot] = self._next_input(robot)
+        self._input_destinations[robot] = self._next_input(robot)
