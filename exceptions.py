@@ -35,3 +35,7 @@ class PositionOutOfMapException(ModellingException):
 class NotRectangleMapException(ModellingException):
     def __init__(self):
         super().__init__("Map is not a rectangle.")
+
+
+class DataImportException(BaseException):
+    pass

@@ -1,3 +1,4 @@
+import csv
 import json
 import simpy
 import simpy.resources.store
@@ -7,6 +8,7 @@ from structures import Map, Direction
 from cell import Cell, MailInputGetter
 from robot import RobotType, Robot
 from brains import Brain
+from exceptions import DataImportException
 
 def import_json(file_path: str):
     with open(file_path) as file:
@@ -29,7 +31,49 @@ def import_map(env: simpy.Environment,
         [import_cell(env, cell, get_mail_input) for cell in line] 
         for line in data['cells']
         ]), data['span']
-    
+
+def import_str_position(position: str, n: int) -> tuple[int, int]:
+    if len(position) != 2:
+        raise DataImportException(f"Invalid position: {position}")
+    return (n-int(position[1]), "abcdefghi".find(position[0]))
+
+def import_map_csv(env: simpy.Environment,
+                   map_: str,
+                   map_details: str,
+                   get_mail_input: MailInputGetter,
+                   ) -> Map:
+    inputs: dict[tuple[int, int], int] = {}
+    outputs: dict[tuple[int, int], int] = {}
+    cells: list[list[Cell]] = []
+    with open(map_details) as map_details_file, open(map_, 'r') as map_file:
+        map_reader = csv.reader(map_file)
+        n = map_reader.line_num
+        for row in csv.reader(map_details_file):
+            match row[0]:
+                case "Y":
+                    outputs[import_str_position(row[1], n)] = int(row[2])
+                case "T":
+                    inputs[import_str_position(row[1], n)] = int(row[2])
+                case other:
+                    raise DataImportException(
+                        f"Invalid map details, expected Y or T, got {other}")
+        for i, row in enumerate(map_reader):
+            cells.append([])
+            for j, item in enumerate(row):
+                match item:
+                    case "G":
+                        cells[i].append(Cell(env))
+                    case "R":
+                        cells[i].append(Cell(env, free=False))
+                    case "T":
+                        cells[i].append(Cell(env, get_mail_input, inputs[i,j]))
+                    case "Y":
+                        cells[i].append(Cell(env, output_id=outputs[i,j]))
+                    case other:
+                        raise DataImportException(
+                            f"Invalid map, expected G, R, T or Y, got {other}")
+    return Map(cells)
+
 def import_robot_type(data: dict[str, typing.Any], 
                       span: float) -> RobotType:
     return RobotType(span/data['speed'], data['timeToTurn'], 
@@ -64,3 +108,10 @@ def import_state(env: simpy.Environment,
                            robot.update(types[robot["robotType"]]), span)
               for robot in data['robots']]
     return brain, map, robots
+
+def import_probabilities(file_name: str) -> dict[int, float]:
+    result: dict[int, float] = {}
+    with open(file_name) as file:
+        for row in csv.reader(file):
+            result[int(row[0])] = float(row[1])
+    return result
