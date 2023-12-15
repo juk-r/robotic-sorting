@@ -46,9 +46,10 @@ def import_map_csv(env: simpy.Environment,
     outputs: dict[tuple[int, int], int] = {}
     cells: list[list[Cell]] = []
     with open(map_details) as map_details_file, open(map_, 'r') as map_file:
-        map_reader = csv.reader(map_file)
-        n = map_reader.line_num
-        for row in csv.reader(map_details_file):
+        map_reader = csv.reader(map_file, delimiter=' ')
+        n = sum(1 for _ in map_reader)
+        map_file.seek(0)
+        for row in csv.reader(map_details_file, delimiter=' '):
             match row[0]:
                 case "Y":
                     outputs[import_str_position(row[1], n)] = int(row[2])
@@ -112,6 +113,6 @@ def import_state(env: simpy.Environment,
 def import_probabilities(file_name: str) -> dict[int, float]:
     result: dict[int, float] = {}
     with open(file_name) as file:
-        for row in csv.reader(file):
+        for row in csv.reader(file, delimiter=' '):
             result[int(row[0])] = float(row[1])
     return result
