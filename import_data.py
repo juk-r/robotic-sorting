@@ -5,10 +5,12 @@ import simpy.resources.store
 import typing
 
 from structures import Map, Direction
-from cell import Cell, MailInputGetter
-from robot import RobotType, Robot
+from cell import SafeCell, MailInputGetter
+from robot import RobotType, SafeRobot
 from brains import Brain
 from exceptions import DataImportException
+from typing import Any
+from modelling import Model
 
 def import_json(file_path: str):
     with open(file_path) as file:
@@ -21,12 +23,12 @@ def import_cell(env: simpy.Environment,
     input_id: int | None = data["inputId"] if "inputId" in data else None
     output_id: int | None = data["outputId"] if "outputId" in data else None
     charge_id: int | None = data["chargeId"] if "chargeId" in data else None
-    return Cell(env, get_mail_input, input_id, output_id, charge_id, free)
+    return SafeCell(env, get_mail_input, input_id, output_id, charge_id, free)
 
 def import_map(env: simpy.Environment,
                data: dict[str, typing.Any], 
                get_mail_input: MailInputGetter
-               ) -> tuple[Map, float]:
+               ) -> tuple[Map[Any], float]:
     return Map([
         [import_cell(env, cell, get_mail_input) for cell in line] 
         for line in data['cells']
@@ -41,10 +43,10 @@ def import_map_csv(env: simpy.Environment,
                    map_: str,
                    map_details: str,
                    get_mail_input: MailInputGetter,
-                   ) -> Map:
+                   ) -> Map[Any]:
     inputs: dict[tuple[int, int], int] = {}
     outputs: dict[tuple[int, int], int] = {}
-    cells: list[list[Cell]] = []
+    cells: list[list[SafeCell]] = []
     with open(map_details) as map_details_file, open(map_, 'r') as map_file:
         map_reader = csv.reader(map_file, delimiter=' ')
         n = sum(1 for _ in map_reader)
@@ -63,13 +65,13 @@ def import_map_csv(env: simpy.Environment,
             for j, item in enumerate(row):
                 match item:
                     case "G":
-                        cells[i].append(Cell(env))
+                        cells[i].append(SafeCell(env))
                     case "R":
-                        cells[i].append(Cell(env, free=False))
+                        cells[i].append(SafeCell(env, free=False))
                     case "T":
-                        cells[i].append(Cell(env, get_mail_input, inputs[i,j]))
+                        cells[i].append(SafeCell(env, get_mail_input, inputs[i,j]))
                     case "Y":
-                        cells[i].append(Cell(env, output_id=outputs[i,j]))
+                        cells[i].append(SafeCell(env, output_id=outputs[i,j]))
                     case other:
                         raise DataImportException(
                             f"Invalid map, expected G, R, T or Y, got {other}")
@@ -88,18 +90,17 @@ def import_direction(direction: str):
         case "right": return Direction.right
         case _: raise ValueError(f"{direction} is not direction")
 
-def import_robot(env: simpy.Environment, 
-                 brain: Brain, 
+def import_robot(env: Model[Any, Any, Any],
                  data: dict[str, typing.Any], 
-                 span: float) -> Robot:
-    return Robot(env, import_robot_type(data, span), brain, 
-                 data['position'], data['direction'], data['charge'])
+                 span: float) -> SafeRobot:
+    return SafeRobot(env, import_robot_type(data, span), 
+                 data['position'], data['direction'])
 
 def import_state(env: simpy.Environment, 
                  data: dict[str, typing.Any], 
-                 brain_from_map: typing.Callable[[Map], Brain], 
+                 brain_from_map: typing.Callable[[Map[Any]], Brain[Any, Any]], 
                  get_mail_input: MailInputGetter
-                 ) -> tuple[Brain, Map, list[Robot]]:
+                 ) -> tuple[Brain[Any, Any], Map[Any], list[SafeRobot]]:
     raise NotImplementedError()
     map, span = import_map(env, data['map'], get_mail_input)
     brain = brain_from_map(map)

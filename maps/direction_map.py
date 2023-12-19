@@ -1,12 +1,12 @@
 import typing
 import simpy
 
-from structures import GenericMap, Direction, Position
-from cell import Cell, MailInputGetter
+from structures import Map, Direction, Position
+from cell import SafeCell, MailInputGetter
 from maps.one_way_map import OneWayMap
 
 
-class DirectionCell(Cell):
+class DirectionCell(SafeCell):
     @property
     def to_inputs(self):
         return self._to_inputs
@@ -32,7 +32,7 @@ class DirectionCell(Cell):
         self._to_charges = to_charges
 
     @staticmethod
-    def from_cell(cell: Cell,
+    def from_cell(cell: SafeCell,
                  to_inputs: dict[int, Direction],
                  to_outputs: dict[int, Direction],
                  to_charges: dict[int, Direction]):
@@ -46,12 +46,12 @@ class DirectionCell(Cell):
 
 TDirectionCell = typing.TypeVar("TDirectionCell", bound=DirectionCell)
 
-class GenericDirectionMap(GenericMap[TDirectionCell]):
+class GenericDirectionMap(Map[TDirectionCell]):
     def __init__(self, map_: typing.Sequence[typing.Sequence[TDirectionCell]]):
         super().__init__(map_)
 
     @staticmethod
-    def generate_shortest(map_: OneWayMap[Cell]) -> "GenericDirectionMap[DirectionCell]":
+    def generate_shortest(map_: OneWayMap[SafeCell]) -> "GenericDirectionMap[DirectionCell]":
         to_inputs: list[list[dict[int, Direction]]] = \
             [[{} for _ in range(map_.m)] for _ in range(map_.n)]
         to_outputs: list[list[dict[int, Direction]]] = \

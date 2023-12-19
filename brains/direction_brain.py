@@ -1,40 +1,40 @@
 import typing
-import simpy
-import collections
 
 from brains.brain import Brain
-from robot import Robot
+from robot import SafeRobot
 
 if typing.TYPE_CHECKING:
     from maps import DirectionMap
     from structures import Direction
+    from modelling import Model
 
 
-class DirectionBrain(Brain):
-    def __init__(self, env: simpy.Environment, map_: "DirectionMap"):
-        super().__init__(env, map_)
-        self._map: DirectionMap
-        self._input_destinations = collections.defaultdict[Robot, int](
-            lambda: self._next_input(None))
+class DirectionBrain(Brain["DirectionMap", "SafeRobot"]):
+    def __init__(self, model: "Model[DirectionMap, typing.Self, SafeRobot]"):
+        super().__init__(model)
         self._last = 0
 
-    def _next_input(self, robot: Robot | None):
-        self._last += 1
-        return self._map.input_ids[self._last % len(self._map.input_ids)]
+    @typing.override
+    def new_robot(self, robot: SafeRobot):
+        self._input_destinations[robot] = self._next_input(robot)
 
-    def _turn_move(self, robot: "Robot", direction: "Direction"):
+    def _next_input(self, robot: SafeRobot | None):
+        self._last += 1
+        return self._model.map.input_ids[self._last % len(self._model.map.input_ids)]
+
+    def _turn_move(self, robot: "SafeRobot", direction: "Direction"):
         if robot.direction == direction:
             return robot.Action.move
-        return Robot.Action.turn_to(direction)
+        return SafeRobot.Action.turn_to(direction)
 
     @typing.override
-    def _go_with_mail(self, robot: "Robot", destination: int):
-        return self._turn_move(robot, self._map[robot.position].to_outputs[destination])
+    def _go_with_mail(self, robot: "SafeRobot", destination: int):
+        return self._turn_move(robot, self._model.map[robot.position].to_outputs[destination])
 
     @typing.override
-    def _go_without_mail(self, robot: "Robot", destination: int) -> "Robot.Action":
-        return self._turn_move(robot, self._map[robot.position].to_inputs[destination])
+    def _go_without_mail(self, robot: "SafeRobot", destination: int) -> "SafeRobot.Action":
+        return self._turn_move(robot, self._model.map[robot.position].to_inputs[destination])
 
     @typing.override
-    def _mail_put(self, robot: Robot):
+    def _mail_put(self, robot: SafeRobot):
         self._input_destinations[robot] = self._next_input(robot)

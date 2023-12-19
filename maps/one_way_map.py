@@ -2,9 +2,9 @@ import typing
 import random
 import enum
 
-from structures import GenericMap, TCell, Position, Direction
+from structures import Map, TCell, Position, Direction
 
-class OneWayMap(GenericMap[TCell]):
+class OneWayMap(Map[TCell]):
     class Way(enum.Enum):
         unknown = -1
         backward = 0
@@ -41,7 +41,7 @@ class OneWayMap(GenericMap[TCell]):
         return False
 
     @staticmethod
-    def generate_random(map_: GenericMap[TCell]):
+    def generate_random(map_: Map[TCell]):
         horizontal = [[OneWayMap.Way.unknown for _ in range(map_._m - 1)]
                       for _ in range(map_._n)]
         vertical = [[OneWayMap.Way.unknown for _ in range(map_._m)]

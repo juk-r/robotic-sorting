@@ -4,20 +4,24 @@ import simpy
 import typing
 
 from structures import Position, Direction, Mail, RobotType
-from exceptions import RobotWithoutMailException, RobotWithMailException
+from exceptions import RobotWithoutMailException, RobotWithMailException, IncorrectOutputException
 
 if typing.TYPE_CHECKING:
     from brains import Brain
     import simpy.core
+    from structures import Map
+    from cell import Cell, SafeCell
+    from modelling import Model
 
 
-class Robot:
+CellT = typing.TypeVar("CellT", bound="Cell", covariant=True)
+
+class Robot(typing.Generic[CellT]):
     class Action(enum.Enum):
         idle = 0
         move = 1
         take = 2
         put = 3
-        charge = 4
         turn_to_up = 10
         turn_to_left = 11
         turn_to_down = 12
@@ -36,39 +40,31 @@ class Robot:
     def direction(self):
         return self._direction
     @property
-    def charge(self):
-        return self._charge
-    @property
     def mail(self):
         return self._mail
     @property
     def id(self):
         return self._id
 
-    def __init__(self, env: simpy.Environment,
+    def __init__(self, model: "Model[Map[CellT], Brain[Map[CellT], typing.Self], typing.Self]",
                  type_: RobotType,
-                 brain: "Brain",
                  position: Position,
                  direction: Direction,
-                 charge: float,
-                 wait_time: float = -1):
+                 ):
         self._id = Robot._last_robot_id
         Robot._last_robot_id += 1
 
-        self._env = env
+        self._model = model
         self._type = type_
-        self._brain = brain
         self._position = position
         self._direction = direction
-        self._charge = charge
-        self.wait_time = wait_time
 
-        self._cell_request = self._brain.map[position].request()
-        self._action = env.process(self._run())
+        self._cell_request = model.map[position].reserve()
+        self._action = model.process(self._run())
 
         self._mail: Mail | None = None
         self._start_charge_time: simpy.core.SimTime | None = None
-        self._event: simpy.Event = env.event()
+        self._event: simpy.Event = model.event()
         self._aborted = False
         self.timeout = False
 
@@ -77,7 +73,7 @@ class Robot:
             if not self._event.triggered:
                 self._event.succeed(evt.value)
                 self._aborted = False
-        self._event = self._env.event()
+        self._event = self._model.event()
         if event is not None:
             event.callbacks.append(cancel_event) # pyright: ignore[reportUnknownMemberType]
         return self._event
@@ -97,25 +93,11 @@ class Robot:
 
     def _move(self) -> typing.Generator[simpy.Event, bool, None]:
         next_position = self._position.get_next_on(self._direction)
-        request = self._brain.map[next_position].request()
-        logging.info(f"{self} is waiting for {next_position} to free.")
-        if self.wait_time > 0:
-            start_time = self._env.now
-            yield self._new_abortable_event(request) | self._env.timeout(self.wait_time)
-            self.timeout = (self._env.now - start_time) >= self.wait_time
-        else:
-            yield self._new_abortable_event(request)
-            self.timeout = False
-        if self._aborted:
-            request.cancel()
-            return
-        if self.timeout:
-            request.cancel()
-            logging.info(f"{self} waited too much ({self.wait_time}).")
-            return
+        request = self._model.map[next_position].reserve()
+        yield request
         logging.info(f"{self} is moving to {next_position}.")
-        yield self._env.timeout(self._type.time_to_move)
-        self._brain.map[self._position].release(self._cell_request)
+        yield self._model.timeout(self._type.time_to_move)
+        self._model.map[self._position].unreserve(self._cell_request)
         self._position = next_position
         self._cell_request = request
 
@@ -124,59 +106,95 @@ class Robot:
             raise RobotWithMailException(self)
         logging.info(f"{self} is waiting for mail.")
         self._mail = yield self._new_abortable_event(
-            self._brain.map[self._position].get_input())
+            self._model.map[self._position].get_input())
         if self._aborted:
             return
         logging.info(f"{self} is taking {self._mail}.")
-        yield self._env.timeout(self._type.time_to_take)
+        yield self._model.timeout(self._type.time_to_take)
 
     def _put(self):
         if self._mail is None:
             raise RobotWithoutMailException(self)
+        if self._model.map[self.position].output_id != self._mail.destination:
+            raise IncorrectOutputException(self._mail, self._model.map[self.position])
         logging.info(f"{self} is putting {self._mail}.")
         self._mail = None
-        yield self._env.timeout(self._type.time_to_put)
-
-    @property
-    def time_to_full_charge(self):
-        return 100*(1-self._charge)
-
-    def get_charge_after(self, charge_time: float) -> float:
-        return min(1, self._charge + 0.01*charge_time)
-
-    def _do_charge(self) -> typing.Generator[simpy.Event, None, None]:
-        raise NotImplementedError()
-        start_time = self._env.now
-        logging.log(f"{self} is charging.")
-        yield self._new_abortable_event(self._env.timeout(self.time_to_full_charge))
-        self._charge = self.get_charge_after(self._env.now - start_time)
+        yield self._model.timeout(self._type.time_to_put)
 
     def _turn(self, new_direction: Direction):
         logging.info(f"{self} is turning to {new_direction}.")
-        yield self._env.timeout(Direction.turn_count(self._direction, new_direction)\
+        yield self._model.timeout(Direction.turn_count(self._direction, new_direction)\
                           * self._type.time_to_turn)
         self._direction = new_direction
 
     def _run(self):
         yield self._cell_request
         while True:
-            match act := self._brain.get_next_action(self):
+            match self._model.brain.get_next_action(self):
                 case Robot.Action.idle:
-                    yield self._env.process(self._idle())
+                    yield self._model.process(self._idle())
                 case Robot.Action.move:
-                    yield self._env.process(self._move())
+                    yield self._model.process(self._move())
                 case Robot.Action.take:
-                    yield self._env.process(self._take())
+                    yield self._model.process(self._take())
                 case Robot.Action.put:
-                    yield self._env.process(self._put())
-                case Robot.Action.charge:
-                    yield self._env.process(self._do_charge())
+                    yield self._model.process(self._put())
                 case Robot.Action.turn_to_up | Robot.Action.turn_to_left\
                         | Robot.Action.turn_to_down | Robot.Action.turn_to_right as turn:
-                    yield self._env.process(self._turn(Direction(turn.value-10)))
-            if act is not Robot.Action.move:
-                self.timeout = False
-
+                    yield self._model.process(self._turn(Direction(turn.value-10)))
+    
     @typing.override
     def __str__(self):
         return f"Robot#{self._id}"
+
+
+class SafeRobot(Robot["SafeCell"]):
+    def __init__(self, model: "Model[Map[SafeCell], Brain[Map[SafeCell], typing.Self], typing.Self]",
+                 type_: RobotType,
+                 position: Position,
+                 direction: Direction,
+                 wait_time: float = -1):
+        super().__init__(model, type_, position, direction)
+        self.wait_time = wait_time
+
+    @typing.override
+    def _move(self) -> typing.Generator[simpy.Event, bool, None]:
+        next_position = self._position.get_next_on(self._direction)
+        request = self._model.map[next_position].reserve()
+        logging.info(f"{self} is waiting for {next_position} to free.")
+        if self.wait_time > 0:
+            start_time = self._model.now
+            yield self._new_abortable_event(request) | self._model.timeout(self.wait_time)
+            self.timeout = (self._model.now - start_time) >= self.wait_time
+        else:
+            yield self._new_abortable_event(request)
+            self.timeout = False
+        if self.timeout:
+            logging.info(f"{self} waited too much ({self.wait_time}).")
+        if self.timeout or self._aborted:
+            self._model.map[next_position].unreserve(request)
+            return
+        logging.info(f"{self} is moving to {next_position}.")
+        yield self._model.timeout(self._type.time_to_move)
+        self._model.map[self._position].unreserve(self._cell_request)
+        self._position = next_position
+        self._cell_request = request
+
+    @typing.override
+    def _run(self):
+        yield self._cell_request
+        while True:
+            match act := self._model.brain.get_next_action(self):
+                case Robot.Action.idle:
+                    yield self._model.process(self._idle())
+                case Robot.Action.move:
+                    yield self._model.process(self._move())
+                case Robot.Action.take:
+                    yield self._model.process(self._take())
+                case Robot.Action.put:
+                    yield self._model.process(self._put())
+                case Robot.Action.turn_to_up | Robot.Action.turn_to_left\
+                        | Robot.Action.turn_to_down | Robot.Action.turn_to_right:
+                    yield self._model.process(self._turn(Direction(act.value-10)))
+            if act is not Robot.Action.move:
+                self.timeout = False

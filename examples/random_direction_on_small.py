@@ -1,16 +1,16 @@
-import simpy
 import json
 import random
 
-from cell import Cell
+from cell import SafeCell
 from maps import OneWayMap, DirectionMap
 from mail_factories import MailFromLog
 from import_data import import_map
 from structures import Direction, Position
-from robot import Robot, RobotType
+from robot import SafeRobot, RobotType
 from brains.direction_brain import DirectionBrain
+from modelling import Model
 
-def print_map(map_: OneWayMap[Cell]):
+def print_map(map_: OneWayMap[SafeCell]):
     for i in range(2*map_.n -1):
         for j in range(map_.m):
             if i%2 == 0:
@@ -41,19 +41,18 @@ best_map = None
 TEST_TIME = 10000
 
 for n in range(100):
-    env = simpy.Environment()   
-    factory = MailFromLog(env, r_s)
-
+    model = Model[DirectionMap, DirectionBrain, SafeRobot]()
+    factory = MailFromLog(model, r_s)
     with open("data\\small_map.json") as file:   
-        simple_map = import_map(env, json.load(file), factory)[0]
-    
+        simple_map = import_map(model, json.load(file), factory)[0]
     way_map = OneWayMap.generate_random(simple_map)
-    map_ = DirectionMap.generate_shortest(way_map)
-    brain = DirectionBrain(env, map_)
-    robots = [Robot(env, robot_type, brain, Position(0, i), Direction.down, 1) for i in range(3)]
-    env.run(TEST_TIME)
-    if brain.count > max_:
-        max_ = brain.count
+    model.set_map(DirectionMap.generate_shortest(way_map))
+    model.set_brain(DirectionBrain(model))
+    for i in range(3):
+        model.add_robot(SafeRobot(model, robot_type, Position(0, i), Direction.down, 1))
+    model.run(TEST_TIME)
+    if model.brain.count > max_:
+        max_ = model.brain.count
         best_map = way_map
 
 print(f"BEST: {TEST_TIME/max_} seconds per mail")

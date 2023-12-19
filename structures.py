@@ -79,7 +79,7 @@ class Position:
 
 TCell = typing.TypeVar("TCell", bound=Cell, covariant=True)
 
-class GenericMap(typing.Generic[TCell]):
+class Map(typing.Generic[TCell]):
     @property
     def inputs(self):
         return self._inputs
@@ -137,7 +137,6 @@ class GenericMap(typing.Generic[TCell]):
             raise PositionOutOfMapException(position)
         return self._map[position.x][position.y]
 
-Map = GenericMap[Cell]
 
 class RobotType:
     @property

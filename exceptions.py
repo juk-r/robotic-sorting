@@ -1,7 +1,7 @@
 import typing
 
 if typing.TYPE_CHECKING:
-    from structures import Position
+    from structures import Position, Mail
     from robot import Robot
     from cell import Cell
 
@@ -18,14 +18,28 @@ class NotInputCellException(ModellingException):
         super().__init__(f"{cell} is not an input.")
 
 
+class CellIsReservedException(ModellingException):
+    def __init__(self, cell: "Cell"):
+        super().__init__(f"{cell} is reserved.")
+
+
+class UnknownRequestException(ModellingException):
+    pass
+
+
 class RobotWithMailException(ModellingException):
-    def __init__(self, robot: "Robot"):
+    def __init__(self, robot: "Robot[typing.Any]"):
         super().__init__(f"{robot} already has a mail.")
 
 
 class RobotWithoutMailException(ModellingException):
-    def __init__(self, robot: "Robot"):
+    def __init__(self, robot: "Robot[typing.Any]"):
         super().__init__(f"{robot} does not have a mail to put.")
+
+
+class IncorrectOutputException(ModellingException):
+    def __init__(self, mail: "Mail", cell: "Cell"):
+        super().__init__(f"{cell} is not correct output for {mail}, expected {mail.destination}")
 
 
 class PositionOutOfMapException(ModellingException):

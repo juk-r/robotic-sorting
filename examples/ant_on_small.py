@@ -1,26 +1,30 @@
-import simpy
-
 from brains import AntBrain
 from mail_factories import RandomAlwaysReadyMail
-from robot import Robot
-from structures import RobotType, Position, Direction
+from robot import SafeRobot
+from structures import RobotType, Position, Direction, Map
 from import_data import import_map, import_json
+from modelling import Model
+from cell import SafeCell
 
-env = simpy.Environment()
-mail_factory = RandomAlwaysReadyMail(env, range(2))
-map_ = import_map(env, import_json("data\\small_map.json"), mail_factory)[0]
+model = Model[Map[SafeCell], AntBrain, SafeRobot]()
+
+mail_factory = RandomAlwaysReadyMail(model, range(2))
+model.set_map(import_map(model, import_json("data\\small_map.json"), mail_factory)[0])
+
 robot_type = RobotType(1, 1, 1, 1)
-brain = AntBrain(env, map_, robot_type, 0.5, 1.1, 0.1, 0.1)
-robots = [Robot(env, robot_type, brain, Position(0, i), Direction.down, 1,10) for i in range(3)]
-last_cnt=0
+model.set_brain(AntBrain(model, robot_type, 0, 1.1, 0.5, 10))
 
-for i in range(1, 51):
-    env.run(env.now+30000)
-    brain.update()
+for i in range(3):
+    model.add_robot(SafeRobot(model, robot_type, Position(0, i), Direction.down, 0.5))
+
+last_cnt=0
+for i in range(1, 501):
+    model.run(model.now+30000)
+    model.brain.update()
     if i % 1 == 0:
-        print(i, brain.count-last_cnt)
-        last_cnt = brain.count
+        print(i, model.brain.count-last_cnt)
+        last_cnt = model.brain.count
 
 TEST_TIME = 100000
-env.run(env.now+TEST_TIME)
-print(f"average: {TEST_TIME/(brain.count-last_cnt)} seconds per mail")
+model.run(model.now+TEST_TIME)
+print(f"average: {TEST_TIME/(model.brain.count-last_cnt)} seconds per mail")
