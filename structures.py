@@ -1,26 +1,18 @@
+import dataclasses
 import enum
 import typing
 
 from exceptions import PositionOutOfMapException, NotRectangleMapException
 from cell import Cell
 
+@dataclasses.dataclass(frozen=True, slots=True)
 class Mail:
-    @property
-    def id(self): return self._id
-    @property
-    def destination(self): return self._destination
-
-    def __init__(self, id: int, destination: int):
-        self._id = id
-        self._destination = destination
+    id: int
+    destination: int
 
     @typing.override
     def __str__(self):
-        return f"Mail#{self._id} to {self._destination}"
-
-    @typing.override
-    def __hash__(self):
-        return self._id
+        return f"Mail#{self.id} to {self.destination}"
 
 
 class Direction(enum.Enum):
@@ -44,37 +36,28 @@ class Direction(enum.Enum):
         return Direction((self.value + 2) % 4)
 
 
+@dataclasses.dataclass(frozen=True, slots=True)
 class Position:
-    @property
-    def x(self): return self._x
-    @property
-    def y(self): return self._y
-
-    def __init__(self, x: int, y: int):
-        self._x = x
-        self._y = y
+    x: int
+    y: int
 
     @typing.override
     def __str__(self):
-        return f"({self._x}, {self._y})"
+        return f"({self.x}, {self.y})"
 
     def get_next_on(self, direction: Direction):
         match direction:
             case Direction.up:
-                return Position(self._x - 1, self._y)
+                return Position(self.x - 1, self.y)
             case Direction.left:
-                return Position(self._x, self._y - 1)
+                return Position(self.x, self.y - 1)
             case Direction.down:
-                return Position(self._x + 1, self._y)
+                return Position(self.x + 1, self.y)
             case Direction.right:
-                return Position(self._x, self._y + 1)
+                return Position(self.x, self.y + 1)
 
     def __eq__(self, other: "Position"): # type: ignore
-        return self._x == other._x and self._y == other._y
-
-    @typing.override
-    def __hash__(self):
-        return hash((self._x, self._y))
+        return self.x == other.x and self.y == other.y
 
 
 TCell = typing.TypeVar("TCell", bound=Cell, covariant=True)
@@ -138,22 +121,9 @@ class Map(typing.Generic[TCell]):
         return self._map[position.x][position.y]
 
 
+@dataclasses.dataclass(frozen=True, slots=True)
 class RobotType:
-    @property
-    def time_to_move(self): return self._time_to_move
-    @property
-    def time_to_turn(self): return self._time_to_turn
-    @property
-    def time_to_put(self): return self._time_to_put
-    @property
-    def time_to_take(self): return self._time_to_take
-
-    def __init__(self,
-                 time_to_move: int,
-                 time_to_turn: int,
-                 time_to_put: int,
-                 time_to_take: int):
-        self._time_to_move = time_to_move
-        self._time_to_turn = time_to_turn
-        self._time_to_put = time_to_put
-        self._time_to_take = time_to_take
+    time_to_move: int
+    time_to_turn: int
+    time_to_put: int
+    time_to_take: int
