@@ -7,7 +7,7 @@ import typing
 from structures import Map, Direction
 from cell import SafeCell, MailInputGetter
 from robot import RobotType, SafeRobot
-from brains import Brain
+from brains import OnlineBrain
 from exceptions import DataImportException
 from typing import Any
 from modelling import Model
@@ -98,9 +98,9 @@ def import_robot(env: Model[Any, Any, Any],
 
 def import_state(env: simpy.Environment, 
                  data: dict[str, typing.Any], 
-                 brain_from_map: typing.Callable[[Map[Any]], Brain[Any, Any]], 
+                 brain_from_map: typing.Callable[[Map[Any]], OnlineBrain[Any]], 
                  get_mail_input: MailInputGetter
-                 ) -> tuple[Brain[Any, Any], Map[Any], list[SafeRobot]]:
+                 ) -> tuple[OnlineBrain[Any], Map[Any], list[SafeRobot]]:
     raise NotImplementedError()
     map, span = import_map(env, data['map'], get_mail_input)
     brain = brain_from_map(map)

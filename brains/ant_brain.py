@@ -1,13 +1,13 @@
 import random
 import typing
 
-from brains.brain import Brain
+from brains.brain import OnlineBrain
 from robot import Robot, SafeRobot
 from structures import Map, RobotType, Position, Direction
 from modelling import Model
 from cell import SafeCell
 
-class AntBrain(Brain[Map[SafeCell], SafeRobot]):
+class AntBrain(OnlineBrain[Map[SafeCell]]):
     class _Pheromones:
         def __init__(self, p: float, q: float, rho: float,
                      times: typing.Sequence[float],

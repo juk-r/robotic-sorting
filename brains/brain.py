@@ -1,7 +1,7 @@
 import abc
 import typing
 
-from robot import Robot
+from robot import Robot, SafeRobot
 
 if typing.TYPE_CHECKING:
     from modelling import Model
@@ -18,11 +18,23 @@ class Brain(abc.ABC, typing.Generic[MapT, RobotT]):
 
     def __init__(self, model: "Model[MapT, typing.Self, RobotT]"):
         self._model = model
-        self._idle_robots: list[RobotT] = []
-        self._input_destinations: dict[RobotT, int] = {}
         self._count = 0
 
-    def get_next_action(self, robot: RobotT) -> Robot.Action:
+    @abc.abstractmethod
+    def get_next_action(self, robot: RobotT) -> Robot.Action: ...
+
+    @abc.abstractmethod
+    def new_robot(self, robot: RobotT) -> None: ...
+
+
+class OnlineBrain(Brain[MapT, SafeRobot]):
+    def __init__(self, model: "Model[MapT, typing.Self, SafeRobot]"):
+        super().__init__(model)
+        self._idle_robots: list[SafeRobot] = []
+        self._input_destinations: dict[SafeRobot, int] = {}
+
+    @typing.override
+    def get_next_action(self, robot: SafeRobot) -> Robot.Action:
         if robot.mail is not None:
             if robot.position == self._model.map.outputs[robot.mail.destination]:
                 self._mail_put(robot)
@@ -36,16 +48,13 @@ class Brain(abc.ABC, typing.Generic[MapT, RobotT]):
             return self._go_without_mail(robot, self._input_destinations[robot])
 
     @abc.abstractmethod
-    def _go_with_mail(self, robot: RobotT, destination: int) -> Robot.Action: ...
+    def _go_with_mail(self, robot: SafeRobot, destination: int) -> Robot.Action: ...
 
     @abc.abstractmethod
-    def _go_without_mail(self, robot: RobotT, destination: int) -> Robot.Action: ...
+    def _go_without_mail(self, robot: SafeRobot, destination: int) -> Robot.Action: ...
 
-    def _mail_taken(self, robot: RobotT):
+    def _mail_taken(self, robot: SafeRobot):
         pass
 
-    def _mail_put(self, robot: RobotT):
-        pass
-
-    def new_robot(self, robot: RobotT):
+    def _mail_put(self, robot: SafeRobot):
         pass

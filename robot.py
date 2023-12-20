@@ -7,7 +7,7 @@ from structures import Position, Direction, Mail, RobotType
 from exceptions import RobotWithoutMailException, RobotWithMailException, IncorrectOutputException
 
 if typing.TYPE_CHECKING:
-    from brains import Brain
+    from brains import Brain, OnlineBrain
     import simpy.core
     from structures import Map
     from cell import Cell, SafeCell
@@ -45,8 +45,11 @@ class Robot(typing.Generic[CellT]):
     @property
     def id(self):
         return self._id
+    @property
+    def type(self):
+        return self._type
 
-    def __init__(self, model: "Model[Map[CellT], Brain[Map[CellT], typing.Self], typing.Self]",
+    def __init__(self, model: "Model[Map[CellT], Brain[Map[CellT], Robot[Cell]], Robot[Cell]]",
                  type_: RobotType,
                  position: Position,
                  direction: Direction,
@@ -149,12 +152,12 @@ class Robot(typing.Generic[CellT]):
 
 
 class SafeRobot(Robot["SafeCell"]):
-    def __init__(self, model: "Model[Map[SafeCell], Brain[Map[SafeCell], typing.Self], typing.Self]",
+    def __init__(self, model: "Model[Map[SafeCell], OnlineBrain[Map[SafeCell]], SafeRobot]",
                  type_: RobotType,
                  position: Position,
                  direction: Direction,
                  wait_time: float = -1):
-        super().__init__(model, type_, position, direction)
+        super().__init__(model, type_, position, direction) # type: ignore
         self.wait_time = wait_time
 
     @typing.override

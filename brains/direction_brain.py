@@ -1,6 +1,6 @@
 import typing
 
-from brains.brain import Brain
+from brains.brain import OnlineBrain
 from robot import SafeRobot
 
 if typing.TYPE_CHECKING:
@@ -9,7 +9,7 @@ if typing.TYPE_CHECKING:
     from modelling import Model
 
 
-class DirectionBrain(Brain["DirectionMap", "SafeRobot"]):
+class DirectionBrain(OnlineBrain["DirectionMap"]):
     def __init__(self, model: "Model[DirectionMap, typing.Self, SafeRobot]"):
         super().__init__(model)
         self._last = 0
