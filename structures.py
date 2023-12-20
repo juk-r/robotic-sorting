@@ -106,8 +106,9 @@ class Map(typing.Generic[TCell]):
         self.charge_ids = tuple(self._charges.keys())
 
     def has(self, position: Position):
-        return (position.x >= 0 and position.x < self._n
-                and position.y >= 0 and position.y < self._m)
+        return (0 <= position.x < self._n
+                and 0 <= position.y < self._m
+                and self._map[position.x][position.y].free)
 
     @typing.overload
     def __getitem__(self, position: Position) -> TCell:...
@@ -120,6 +121,16 @@ class Map(typing.Generic[TCell]):
             raise PositionOutOfMapException(position)
         return self._map[position.x][position.y]
 
+    def __iter__(self) -> typing.Iterator[Position]:
+        for x in range(self.n):
+            for y in range(self.m):
+                if self._map[x][y].free:
+                    yield Position(x, y)
+
+    def get_neighbors(self, position: Position) -> typing.Iterable[Position]:
+        for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+            if self.has(pos := Position(position.x+dx, position.y+dy)):
+                yield pos
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class RobotType:
