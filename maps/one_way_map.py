@@ -5,10 +5,10 @@ import enum
 from structures import Map, TCell, Position, Direction
 
 class OneWayMap(Map[TCell]):
-    class Way(enum.Enum):
-        unknown = -1
-        backward = 0
-        forward = 1
+    class Way(enum.Flag):
+        unknown = 0
+        backward = 1
+        forward = 2
 
     @property
     def horizontal(self):
@@ -24,21 +24,19 @@ class OneWayMap(Map[TCell]):
         self._horizontal = horizontal
         self._vertical = vertical
 
-    def can_go(self, position: Position, direction:Direction):
+    @typing.override
+    def can_go(self, pos: Position, direction:Direction) -> bool:
+        if not self.has(pos.get_next_on(direction)):
+            return False
         match direction:
             case Direction.up:
-                if 0 < position.x < self._n and 0 <= position.y < self._m:
-                    return self._vertical[position.x - 1][position.y].value == 0
+                return bool(self._vertical[pos.x - 1][pos.y] & OneWayMap.Way.backward)
             case Direction.down:
-                if 0 <= position.x < self._n-1 and 0 <= position.y < self._m:
-                    return self._vertical[position.x][position.y].value == 1
+                return bool(self._vertical[pos.x][pos.y] & OneWayMap.Way.forward)
             case Direction.left:
-                if 0 <= position.x < self._n and 0 < position.y < self._m :
-                    return self._horizontal[position.x][position.y - 1].value == 0
+                return bool(self._horizontal[pos.x][pos.y - 1] & OneWayMap.Way.backward)
             case Direction.right:
-                if 0 <= position.x < self._n and 0 <= position.y < self._m-1:
-                    return self._horizontal[position.x][position.y].value == 1
-        return False
+                return bool(self._horizontal[pos.x][pos.y] & OneWayMap.Way.forward)
 
     @staticmethod
     def generate_random(map_: Map[TCell]):
@@ -53,22 +51,21 @@ class OneWayMap(Map[TCell]):
             for direction in directions:
                 match direction:
                     case Direction.up:
-                        if x>0 and vertical[x-1][y].value==-1 and map_[x-1, y].free:
+                        if x>0 and not vertical[x-1][y] and map_._map[x-1][y].free:
                             vertical[x-1][y] = OneWayMap.Way.backward
                             generate(x-1, y)
                     case Direction.down:
-                        if x<map_.n-1 and vertical[x][y].value==-1 and map_[x+1, y].free:
+                        if x<map_.n-1 and not vertical[x][y] and map_._map[x+1][y].free:
                             vertical[x][y] = OneWayMap.Way.forward
                             generate(x+1, y)
                     case Direction.left:
-                        if y>0 and horizontal[x][y-1].value==-1 and map_[x, y-1].free:
+                        if y>0 and not horizontal[x][y-1] and map_._map[x][y-1].free:
                             horizontal[x][y-1] = OneWayMap.Way.backward
                             generate(x, y-1)
                     case Direction.right:
-                        if y<map_.m-1 and horizontal[x][y].value==-1 and map_[x, y+1].free:
+                        if y<map_.m-1 and not horizontal[x][y] and map_._map[x][y+1].free:
                             horizontal[x][y] = OneWayMap.Way.forward
                             generate(x, y+1)
         generate(map_.inputs[tuple(map_.inputs.keys())[0]].x,
                  map_.inputs[tuple(map_.inputs.keys())[0]].y)
         return OneWayMap(map_._map, horizontal, vertical)
-            

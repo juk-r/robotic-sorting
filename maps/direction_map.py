@@ -83,7 +83,7 @@ class GenericDirectionMap(Map[TDirectionCell]):
                     dfs(locals()[f"to_{type_}"], id_, go_next[i])
                     i += 1
         return GenericDirectionMap(
-            [[DirectionCell.from_cell(map_[x,y], to_inputs[x][y], 
+            [[DirectionCell.from_cell(map_._map[x][y], to_inputs[x][y], 
                                       to_outputs[x][y], to_charges[x][y])
               for y in range(map_.m)] for x in range(map_.n)])
 

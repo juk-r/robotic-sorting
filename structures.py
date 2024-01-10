@@ -34,6 +34,10 @@ class Direction(enum.Enum):
     @property
     def inverse(self):
         return Direction((self.value + 2) % 4)
+    
+    @typing.override
+    def __repr__(self):
+        return self.name[0]
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -42,7 +46,7 @@ class Position:
     y: int
 
     @typing.override
-    def __str__(self):
+    def __repr__(self):
         return f"({self.x}, {self.y})"
 
     def get_next_on(self, direction: Direction):
@@ -55,9 +59,6 @@ class Position:
                 return Position(self.x + 1, self.y)
             case Direction.right:
                 return Position(self.x, self.y + 1)
-
-    def __eq__(self, other: "Position"): # type: ignore
-        return self.x == other.x and self.y == other.y
 
 
 TCell = typing.TypeVar("TCell", bound=Cell, covariant=True)
@@ -94,6 +95,7 @@ class Map(typing.Generic[TCell]):
             if len(line) != self._m:
                 raise NotRectangleMapException()
             for y, cell in enumerate(line):
+                cell.position = Position(x, y)
                 if cell.input_id is not None:
                     self._inputs[cell.input_id] = Position(x, y)
                 if cell.output_id is not None:
@@ -131,6 +133,12 @@ class Map(typing.Generic[TCell]):
         for dx, dy in ((-1, 0), (1, 0), (0, -1), (0, 1)):
             if self.has(pos := Position(position.x+dx, position.y+dy)):
                 yield pos
+
+    def distance(self, pos1: Position, pos2: Position):
+        return abs(pos1.x - pos2.x) + abs(pos1.y - pos2.y)
+
+    def can_go(self, position: Position, direction: Direction, /) -> bool:
+        return self.has(position.get_next_on(direction))
 
 @dataclasses.dataclass(frozen=True, slots=True)
 class RobotType:

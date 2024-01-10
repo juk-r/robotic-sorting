@@ -10,6 +10,9 @@ from exceptions import (
     UnknownRequestException
 )
 
+if typing.TYPE_CHECKING:
+    from structures import Position
+
 MailInputGetter = typing.Callable[
                    [int],
                    typing.Callable[[], simpy.resources.store.StoreGet]]
@@ -65,13 +68,14 @@ class Cell:
         self._charge_id = charge_id
         self._reserved = False
         self._requests: list[simpy.Event] = []
+        self.position: None | Position = None
 
     def reserve(self) -> simpy.Event:
         if not self._free:
             raise NotFreeCellException(self)
         if self._reserved:
             raise CellIsReservedException(self)
-        self._requests.append(self._env.timeout())
+        self._requests.append(self._env.timeout(0))
         self._reserved = True
         return self._requests[-1]
 
@@ -85,6 +89,10 @@ class Cell:
         if self._input is None:
             raise NotInputCellException(self)
         return self._input()
+    
+    @typing.override
+    def __repr__(self):
+        return f"Cell{self.position}"
 
 
 class SafeCell(Cell, simpy.Resource):
