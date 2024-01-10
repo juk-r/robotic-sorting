@@ -108,12 +108,13 @@ class Robot(typing.Generic[CellT]):
         if self._mail is not None:
             raise RobotWithMailException(self)
         logging.info(f"{self} is waiting for mail.")
-        self._mail = yield self._new_abortable_event(
+        mail = yield self._new_abortable_event(
             self._model.map[self._position].get_input())
         if self._aborted:
             return
         logging.info(f"{self} is taking {self._mail}.")
         yield self._model.timeout(self._type.time_to_take)
+        self._mail = mail
 
     def _put(self):
         if self._mail is None:
@@ -121,8 +122,8 @@ class Robot(typing.Generic[CellT]):
         if self._model.map[self.position].output_id != self._mail.destination:
             raise IncorrectOutputException(self._mail, self._model.map[self.position])
         logging.info(f"{self} is putting {self._mail}.")
-        self._mail = None
         yield self._model.timeout(self._type.time_to_put)
+        self._mail = None
 
     def _turn(self, new_direction: Direction):
         logging.info(f"{self} is turning to {new_direction}.")
@@ -147,7 +148,7 @@ class Robot(typing.Generic[CellT]):
                     yield self._model.process(self._turn(Direction(turn.value-10)))
     
     @typing.override
-    def __str__(self):
+    def __repr__(self):
         return f"Robot#{self._id}"
 
 
