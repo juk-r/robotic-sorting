@@ -5,12 +5,14 @@ import simpy.resources.store
 import typing
 
 from structures import Map, Direction
-from cell import SafeCell, MailInputGetter
+from cell import SafeCell, MailInputGetter, Cell
 from robot import RobotType, SafeRobot
 from brains import OnlineBrain
 from exceptions import DataImportException
 from typing import Any
 from modelling import Model
+
+CellT = typing.TypeVar("CellT", bound=Cell)
 
 def import_json(file_path: str):
     with open(file_path) as file:
@@ -18,19 +20,29 @@ def import_json(file_path: str):
 
 def import_cell(env: simpy.Environment, 
                 data: dict[str, typing.Any], 
-                get_mail_input: MailInputGetter):
+                get_mail_input: MailInputGetter,
+                CellType: type[CellT]) -> CellT:
     free: bool = data["free"] if "free" in data else True
     input_id: int | None = data["inputId"] if "inputId" in data else None
     output_id: int | None = data["outputId"] if "outputId" in data else None
     charge_id: int | None = data["chargeId"] if "chargeId" in data else None
-    return SafeCell(env, get_mail_input, input_id, output_id, charge_id, free)
+    return CellType(env, get_mail_input, input_id, output_id, charge_id, free)
+
+def import_safe_map(env: simpy.Environment,
+               data: dict[str, typing.Any], 
+               get_mail_input: MailInputGetter
+               ) -> tuple[Map[SafeCell], float]:
+    return Map([
+        [import_cell(env, cell, get_mail_input, SafeCell) for cell in line] 
+        for line in data['cells']
+        ]), data['span']
 
 def import_map(env: simpy.Environment,
                data: dict[str, typing.Any], 
                get_mail_input: MailInputGetter
-               ) -> tuple[Map[Any], float]:
+               ) -> tuple[Map[Cell], float]:
     return Map([
-        [import_cell(env, cell, get_mail_input) for cell in line] 
+        [import_cell(env, cell, get_mail_input, Cell) for cell in line] 
         for line in data['cells']
         ]), data['span']
 
@@ -102,7 +114,7 @@ def import_state(env: simpy.Environment,
                  get_mail_input: MailInputGetter
                  ) -> tuple[OnlineBrain[Any], Map[Any], list[SafeRobot]]:
     raise NotImplementedError()
-    map, span = import_map(env, data['map'], get_mail_input)
+    map, span = import_safe_map(env, data['map'], get_mail_input)
     brain = brain_from_map(map)
     types = {type_['typeName']: import_robot_type(type_, span) 
                    for type_ in data['robotTypes']}
