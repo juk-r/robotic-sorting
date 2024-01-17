@@ -15,6 +15,12 @@ RobotT = typing.TypeVar("RobotT", bound="Robot[Any]", covariant=True)
 MapT = typing.TypeVar("MapT", bound="Map[Any]", covariant=True)
 
 class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
+    """
+    Base Model class. The following functions must be called:
+    - `set_map`
+    - `set_brain`
+    - `add_robot`
+    """
     map: MapT
     brain: BrainT
     robots: list[RobotT]
@@ -48,6 +54,9 @@ class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
         return average, std
 
     def record(self, time_: int, file_name: str = 'record.json'):
+        """
+        records to `file_name`
+        """
         init_pos: list[tuple[int, int, int, int, bool]] = []
         for robot in self.robots:
             init_pos.append((0, robot.position.x, robot.position.y,
@@ -65,6 +74,7 @@ class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
                     if (robot.direction.value != data[-2][j][3] and
                             (robot.direction.value - data[-2][j][3]) % 2 == 0):
                         start = -1-2*robot.type.time_to_turn
+                        if start < -len(data): continue
                         data[start][j] = (robot.type.time_to_turn,
                                           data[start][j][1], data[start][j][2],
                                           (data[start][j][3]+1)%4, data[start][j][4])

@@ -71,9 +71,6 @@ class Map(typing.Generic[TCell]):
     def outputs(self):
         return self._outputs
     @property
-    def charges(self):
-        return self._charges
-    @property
     def n(self):
         return self._n
     @property
@@ -90,7 +87,6 @@ class Map(typing.Generic[TCell]):
             raise NotRectangleMapException()
         self._inputs: dict[int, Position] = {}
         self._outputs: dict[int, Position] = {}
-        self._charges: dict[int, Position] = {}
         for x, line in enumerate(self._map):
             if len(line) != self._m:
                 raise NotRectangleMapException()
@@ -100,12 +96,9 @@ class Map(typing.Generic[TCell]):
                     self._inputs[cell.input_id] = Position(x, y)
                 if cell.output_id is not None:
                     self._outputs[cell.output_id] = Position(x, y)
-                if cell.charge_id is not None:
-                    self._charges[cell.charge_id] = Position(x, y)
 
         self.input_ids = tuple(self._inputs.keys())
         self.output_ids = tuple(self._outputs.keys())
-        self.charge_ids = tuple(self._charges.keys())
 
     def has(self, position: Position):
         return (0 <= position.x < self._n
@@ -135,6 +128,7 @@ class Map(typing.Generic[TCell]):
                 yield pos
 
     def distance(self, pos1: Position, pos2: Position):
+        """ Manhattan distance `|x|+|y|`"""
         return abs(pos1.x - pos2.x) + abs(pos1.y - pos2.y)
 
     def can_go(self, position: Position, direction: Direction, /) -> bool:

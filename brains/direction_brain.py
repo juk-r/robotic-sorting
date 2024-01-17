@@ -10,6 +10,10 @@ if typing.TYPE_CHECKING:
 
 
 class DirectionBrain(OnlineBrain["DirectionMap"]):
+    """
+    Uses `DirectionMap`, for each cell knows direction for robot to go.
+    Deadlock appears if cycle with length less than number of robots exists.
+    """
     def __init__(self, model: "Model[DirectionMap, typing.Self, SafeRobot]"):
         super().__init__(model)
         self._last = 0

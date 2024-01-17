@@ -5,6 +5,7 @@ import simpy
 import simpy.resources.store
 
 class MailFactory(abc.ABC):
+    """Abstract Mail Factory"""
     def __init__(self, env: simpy.Environment):
         self._env = env
         self._stores = collections.defaultdict[int, simpy.Store](

@@ -12,8 +12,10 @@ RobotT = typing.TypeVar("RobotT", bound = "Robot[Cell]")
 MapT = typing.TypeVar("MapT", bound = "Map[Cell]", covariant=True)
 
 class Brain(abc.ABC, typing.Generic[MapT, RobotT]):
+    """Abstract class for brain"""
     @property
     def count(self):
+        """count of delivered mails"""
         return self._count
 
     def __init__(self, model: "Model[MapT, typing.Self, RobotT]"):
@@ -21,13 +23,16 @@ class Brain(abc.ABC, typing.Generic[MapT, RobotT]):
         self._count = 0
 
     @abc.abstractmethod
-    def get_next_action(self, robot: RobotT) -> Robot.Action: ...
+    def get_next_action(self, robot: RobotT) -> Robot.Action:
+        """Called by robot"""
 
     @abc.abstractmethod
-    def new_robot(self, robot: RobotT) -> None: ...
+    def new_robot(self, robot: RobotT) -> None:
+        """Called by model when adding new robot"""
 
 
 class OnlineBrain(Brain[MapT, SafeRobot]):
+    """Abstract class for brain which for every robot position knowns action"""
     def __init__(self, model: "Model[MapT, typing.Self, SafeRobot]"):
         super().__init__(model)
         self._idle_robots: list[SafeRobot] = []
@@ -48,13 +53,15 @@ class OnlineBrain(Brain[MapT, SafeRobot]):
             return self._go_without_mail(robot, self._input_destinations[robot])
 
     @abc.abstractmethod
-    def _go_with_mail(self, robot: SafeRobot, destination: int) -> Robot.Action: ...
+    def _go_with_mail(self, robot: SafeRobot, destination: int) -> Robot.Action:
+        """Called if robot has mail"""
 
     @abc.abstractmethod
-    def _go_without_mail(self, robot: SafeRobot, destination: int) -> Robot.Action: ...
+    def _go_without_mail(self, robot: SafeRobot, destination: int) -> Robot.Action:
+        """Called if robot does not have mail"""
 
     def _mail_taken(self, robot: SafeRobot):
-        pass
+        """Called before sending `Action.take`"""
 
     def _mail_put(self, robot: SafeRobot):
-        pass
+        """Called before sending `Action.put`"""

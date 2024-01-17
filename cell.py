@@ -28,10 +28,6 @@ class Cell:
     def output_id(self):
         return self._output_id
     @property
-    def charge_id(self):
-        return self._charge_id
-
-    @property
     def reserved(self):
         return self._reserved
 
@@ -40,20 +36,17 @@ class Cell:
                  get_mail_input: None = None,
                  input_id: None = None,
                  output_id: int | None = None,
-                 charge_id: int | None = None,
                  free: bool = True) -> None: ...
     @typing.overload
     def __init__(self, env: simpy.Environment,
                  get_mail_input: MailInputGetter,
                  input_id: int | None = None,
                  output_id: int | None = None,
-                 charge_id: int | None = None,
                  free: bool = True) -> None: ...
     def __init__(self, env: simpy.Environment,
                  get_mail_input: MailInputGetter | None = None,
                  input_id: int | None = None,
                  output_id: int | None = None,
-                 charge_id: int | None = None,
                  free: bool = True):
         self._env = env
         self._free = free
@@ -65,7 +58,6 @@ class Cell:
         else:
             self._input = None
         self._output_id = output_id
-        self._charge_id = charge_id
         self._reserved = False
         self._requests: list[simpy.Event] = []
         self.position: None | Position = None
@@ -96,28 +88,28 @@ class Cell:
 
 
 class SafeCell(Cell, simpy.Resource):
+    """
+    Cell for `SafeRobot` so robot waits for cell to free
+    """
     @typing.overload
     def __init__(self, env: simpy.Environment,
                  get_mail_input: None = None,
                  input_id: None = None,
                  output_id: int | None = None,
-                 charge_id: int | None = None,
                  free: bool = True) -> None: ...
     @typing.overload
     def __init__(self, env: simpy.Environment,
                  get_mail_input: MailInputGetter,
                  input_id: int | None = None,
                  output_id: int | None = None,
-                 charge_id: int | None = None,
                  free: bool = True) -> None: ...
     def __init__(self, env: simpy.Environment,
                  get_mail_input: MailInputGetter | None = None,
                  input_id: int | None = None,
                  output_id: int | None = None,
-                 charge_id: int | None = None,
                  free: bool = True):
         simpy.Resource.__init__(self, env)
-        Cell.__init__(self, env, get_mail_input, input_id, output_id, charge_id, free) # type: ignore
+        Cell.__init__(self, env, get_mail_input, input_id, output_id, free) # type: ignore
 
     @typing.override
     def reserve(self) -> simpy.Event:

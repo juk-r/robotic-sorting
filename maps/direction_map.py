@@ -7,40 +7,34 @@ from maps.one_way_map import OneWayMap
 
 
 class DirectionCell(SafeCell):
+    """Derives from `SafeCell`.
+    For destination (inputs and outputs) stores direction to go."""
     @property
     def to_inputs(self):
         return self._to_inputs
     @property
     def to_outputs(self):
         return self._to_outputs
-    @property
-    def to_charges(self):
-        return self._to_charges
 
     def __init__(self, env: simpy.Environment,
                  get_mail_input: MailInputGetter,
                  to_inputs: dict[int, Direction],
                  to_outputs: dict[int, Direction],
-                 to_charges: dict[int, Direction],
                  input_id: int | None = None,
                  output_id: int | None = None,
-                 charge_id: int | None = None,
                  free: bool = True):
-        super().__init__(env, get_mail_input, input_id, output_id, charge_id, free)
+        super().__init__(env, get_mail_input, input_id, output_id, free)
         self._to_inputs = to_inputs
         self._to_outputs = to_outputs
-        self._to_charges = to_charges
 
     @staticmethod
     def from_cell(cell: SafeCell,
                  to_inputs: dict[int, Direction],
-                 to_outputs: dict[int, Direction],
-                 to_charges: dict[int, Direction]):
+                 to_outputs: dict[int, Direction]):
         result = DirectionCell.__new__(DirectionCell)
         result.__dict__.update(cell.__dict__)
         result._to_inputs = to_inputs
         result._to_outputs = to_outputs
-        result._to_charges = to_charges
         return result
 
 
@@ -52,11 +46,10 @@ class GenericDirectionMap(Map[TDirectionCell]):
 
     @staticmethod
     def generate_shortest(map_: OneWayMap[SafeCell]) -> "GenericDirectionMap[DirectionCell]":
+        """generate shortest (by cell count) path for each destination."""
         to_inputs: list[list[dict[int, Direction]]] = \
             [[{} for _ in range(map_.m)] for _ in range(map_.n)]
         to_outputs: list[list[dict[int, Direction]]] = \
-            [[{} for _ in range(map_.m)] for _ in range(map_.n)]
-        to_charges: list[list[dict[int, Direction]]] = \
             [[{} for _ in range(map_.m)] for _ in range(map_.n)]
         used: list[list[bool]]
         go_next: list[Position]
@@ -73,7 +66,7 @@ class GenericDirectionMap(Map[TDirectionCell]):
                     array[new_position.x][new_position.y][id] = direction.inverse
                     go_next.append(new_position)
 
-        for type_ in ('inputs', 'outputs', 'charges'):
+        for type_ in ('inputs', 'outputs'):
             d: dict[int, Position] = map_.__dict__["_" + type_]
             for id_, start in d.items():
                 used = [[False for _ in range(map_.m)] for _ in range(map_.n)]
@@ -84,7 +77,7 @@ class GenericDirectionMap(Map[TDirectionCell]):
                     i += 1
         return GenericDirectionMap(
             [[DirectionCell.from_cell(map_._map[x][y], to_inputs[x][y], 
-                                      to_outputs[x][y], to_charges[x][y])
+                                      to_outputs[x][y])
               for y in range(map_.m)] for x in range(map_.n)])
 
 DirectionMap = GenericDirectionMap[DirectionCell]

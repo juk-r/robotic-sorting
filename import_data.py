@@ -15,6 +15,7 @@ from modelling import Model
 CellT = typing.TypeVar("CellT", bound=Cell)
 
 def import_json(file_path: str):
+    """short of `json.loads(open(file_path).read())`"""
     with open(file_path) as file:
         return json.load(file)
 
@@ -25,13 +26,13 @@ def import_cell(env: simpy.Environment,
     free: bool = data["free"] if "free" in data else True
     input_id: int | None = data["inputId"] if "inputId" in data else None
     output_id: int | None = data["outputId"] if "outputId" in data else None
-    charge_id: int | None = data["chargeId"] if "chargeId" in data else None
-    return CellType(env, get_mail_input, input_id, output_id, charge_id, free)
+    return CellType(env, get_mail_input, input_id, output_id, free)
 
 def import_safe_map(env: simpy.Environment,
                data: dict[str, typing.Any], 
                get_mail_input: MailInputGetter
                ) -> tuple[Map[SafeCell], float]:
+    """returns `Map` of `SafeCell`s from dictionary (gotten from .json)"""
     return Map([
         [import_cell(env, cell, get_mail_input, SafeCell) for cell in line] 
         for line in data['cells']
@@ -41,6 +42,7 @@ def import_map(env: simpy.Environment,
                data: dict[str, typing.Any], 
                get_mail_input: MailInputGetter
                ) -> tuple[Map[Cell], float]:
+    """returns `Map` of `Cell`s from dictionary (gotten from .json)"""
     return Map([
         [import_cell(env, cell, get_mail_input, Cell) for cell in line] 
         for line in data['cells']
@@ -56,6 +58,12 @@ def import_map_csv(env: simpy.Environment,
                    map_details: str,
                    get_mail_input: MailInputGetter,
                    ) -> Map[Any]:
+    """returns map from csv
+
+    param map_: path to map.csv
+    param map_details: path to map details
+    param get_mail_input: mail factory
+    """
     inputs: dict[tuple[int, int], int] = {}
     outputs: dict[tuple[int, int], int] = {}
     cells: list[list[SafeCell]] = []
@@ -113,6 +121,7 @@ def import_state(env: simpy.Environment,
                  brain_from_map: typing.Callable[[Map[Any]], OnlineBrain[Any]], 
                  get_mail_input: MailInputGetter
                  ) -> tuple[OnlineBrain[Any], Map[Any], list[SafeRobot]]:
+    """Not implemented"""
     raise NotImplementedError()
     map, span = import_safe_map(env, data['map'], get_mail_input)
     brain = brain_from_map(map)

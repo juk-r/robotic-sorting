@@ -5,6 +5,7 @@ import enum
 from structures import Map, TCell, Position, Direction
 
 class OneWayMap(Map[TCell]):
+    """Map that between every neighbors cells only 1 direction is allowed"""
     class Way(enum.Flag):
         unknown = 0
         backward = 1
@@ -40,6 +41,7 @@ class OneWayMap(Map[TCell]):
 
     @staticmethod
     def generate_random(map_: Map[TCell]):
+        """generates random connected (if possible) map"""
         horizontal = [[OneWayMap.Way.unknown for _ in range(map_._m - 1)]
                       for _ in range(map_._n)]
         vertical = [[OneWayMap.Way.unknown for _ in range(map_._m)]

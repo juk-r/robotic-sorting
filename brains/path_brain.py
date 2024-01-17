@@ -37,6 +37,11 @@ class Reservation:
 
 
 class PathBrain(Brain[Map[Cell], Robot[Cell]]):
+    """
+    For each robot sequentially finds shortest path in `Position x Direction x Times` space
+    from current position to destination and then to resting position.
+    `brain.robots_rests` must be set for each robot.
+    """
     def __init__(self, 
                  model: Model[Map[Cell], typing.Self, Robot[Cell]],
                  robot_type: RobotType,
