@@ -2,14 +2,14 @@ from brains import AntBrain
 from mail_factories import RandomAlwaysReadyMail
 from robot import SafeRobot
 from structures import RobotType, Position, Direction, Map
-from import_data import import_map, import_json
+from import_data import import_safe_map, import_json
 from modelling import Model
 from cell import SafeCell
 
 model = Model[Map[SafeCell], AntBrain, SafeRobot]()
 
 mail_factory = RandomAlwaysReadyMail(model, range(2))
-model.set_map(import_map(model, import_json("data\\small_map.json"), mail_factory)[0])
+model.set_map(import_safe_map(model, import_json("data\\small_map.json"), mail_factory)[0])
 
 robot_type = RobotType(1, 1, 1, 1)
 model.set_brain(AntBrain(model, robot_type, 0, 1.1, 0.5, 10))

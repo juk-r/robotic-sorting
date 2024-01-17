@@ -13,7 +13,7 @@ map_ = import_map(model, import_json("data\\map1-simple.json"), mail_factory)[0]
 model.set_map(map_)
 
 robot_type = RobotType(1, 1, 1, 1)
-model.set_brain(PathBrain(model, robot_type, True, False))
+model.set_brain(PathBrain(model, robot_type))
 starts = [
     Position(2, 2),
     Position(2, 4),

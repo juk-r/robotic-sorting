@@ -70,7 +70,6 @@ class AntBrain(OnlineBrain[Map[SafeCell]]):
 
         self._to_inputs = new_pheromones(model.map.input_ids)
         self._to_outputs = new_pheromones(model.map.output_ids)
-        self._to_charges = new_pheromones(model.map.charge_ids)
         self._last = 0
         self._given_actions: dict[SafeRobot, list[tuple[AntBrain._Pheromones, int]]] = {}
         self._start_time: dict[SafeRobot, float] = {}
@@ -129,6 +128,6 @@ class AntBrain(OnlineBrain[Map[SafeCell]]):
         self._start_time[robot] = self._model.now
 
     def update(self):
-        for to in (self._to_inputs, self._to_outputs, self._to_charges):
+        for to in (self._to_inputs, self._to_outputs):
             for ph in to.values():
                 ph.update()

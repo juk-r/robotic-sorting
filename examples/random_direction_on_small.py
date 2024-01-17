@@ -4,7 +4,7 @@ import random
 from cell import SafeCell
 from maps import OneWayMap, DirectionMap
 from mail_factories import MailFromLog
-from import_data import import_map
+from import_data import import_safe_map
 from structures import Direction, Position
 from robot import SafeRobot, RobotType
 from brains.direction_brain import DirectionBrain
@@ -44,7 +44,7 @@ for n in range(100):
     model = Model[DirectionMap, DirectionBrain, SafeRobot]()
     factory = MailFromLog(model, r_s)
     with open("data\\small_map.json") as file:   
-        simple_map = import_map(model, json.load(file), factory)[0]
+        simple_map = import_safe_map(model, json.load(file), factory)[0]
     way_map = OneWayMap.generate_random(simple_map)
     model.set_map(DirectionMap.generate_shortest(way_map))
     model.set_brain(DirectionBrain(model))

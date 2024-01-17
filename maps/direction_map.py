@@ -61,8 +61,9 @@ class GenericDirectionMap(Map[TDirectionCell]):
             for direction in (Direction.up, Direction.left,
                               Direction.down, Direction.right):
                 new_position = pos.get_next_on(direction)
-                if map_.can_go(new_position, direction.inverse) and\
-                        not used[new_position.x][new_position.y]:
+                if (map_.has(new_position) and
+                        map_.can_go(new_position, direction.inverse) and
+                        not used[new_position.x][new_position.y]):
                     array[new_position.x][new_position.y][id] = direction.inverse
                     go_next.append(new_position)
 
