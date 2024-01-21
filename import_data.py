@@ -57,7 +57,7 @@ def import_map_csv(env: simpy.Environment,
                    map_: str,
                    map_details: str,
                    get_mail_input: MailInputGetter,
-                   ) -> Map[Any]:
+                   ) -> Map[SafeCell]:
     """returns map from csv
 
     param map_: path to map.csv

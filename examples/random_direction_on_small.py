@@ -15,17 +15,17 @@ def print_map(map_: OneWayMap[SafeCell]):
         for j in range(map_.m):
             if i%2 == 0:
                 if j!=0:
-                    if map_.horizontal[i//2][j-1].value == 1:
+                    if map_.horizontal[i//2][j-1] == OneWayMap.Way.forward:
                         print('→| |', end='')
-                    elif map_.horizontal[i//2][j-1].value == 0:
+                    elif map_.horizontal[i//2][j-1] == OneWayMap.Way.backward:
                         print('←| |', end='')
                     else:
                         print(' | |', end='')
                 else: print('| |', end='')
             else:
-                if map_.vertical[i//2][j].value == 1:
+                if map_.vertical[i//2][j] == OneWayMap.Way.forward:
                     print(' ↓  ', end='')
-                elif map_.vertical[i//2][j].value == 0:
+                elif map_.vertical[i//2][j] == OneWayMap.Way.backward:
                     print(' ↑  ', end='')
                 else:
                     print('    ', end='')

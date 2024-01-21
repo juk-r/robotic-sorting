@@ -76,6 +76,9 @@ class Map(typing.Generic[TCell]):
     @property
     def m(self):
         return self._m
+    @property
+    def cells(self):
+        return self._map
 
     def __init__(self, map_: typing.Sequence[typing.Sequence[TCell]]):
         self._map = map_
