@@ -1,22 +1,21 @@
 import json
-from import_data import import_json, import_map
-from structures import Position
+from structures import Position, Map
+from cell import Cell
 
 CELL_SIZE = 30
 CELL_SPACE = 3
 SPEED = 0.3
 MOVE = CELL_SIZE + CELL_SPACE
 
-map_ = import_map(None, import_json('data\\greece.json'), lambda x: None)[0] # type: ignore
+def generate(map_: Map[Cell], record: str, output: str):
 
-with open("record.json") as file:
-    json_data = json.load(file)
-    data: list[list[tuple[int, int, int, int, bool]]] = json_data['data']
-    init: list[tuple[int, int, int, int, bool]] = json_data['init']
+    with open(record) as file:
+        json_data = json.load(file)
+        data: list[list[tuple[int, int, int, int, bool]]] = json_data['data']
+        init: list[tuple[int, int, int, int, bool]] = json_data['init']
 
-
-with open("visualization\\path2.html", 'w') as file:
-    file.write(
+    with open(output, 'w') as file:
+        file.write(
 '''<head>
     <style>
         rect.cell{
@@ -54,21 +53,21 @@ with open("visualization\\path2.html", 'w') as file:
 height='''+str(map_.n*(MOVE))+'''px>
 <g>
 ''')
-    for i in range(map_.n):
-        for j in range(map_.m):
-            file.write(f'<rect x={j*(MOVE)}px y={i*(MOVE)}px ')
-            if not map_.has(Position(i, j)):
-                file.write("class='cell wall' ")
-            elif map_[i, j].input_id is not None:
-                file.write("class='cell input' ")
-            elif map_[i, j].output_id is not None:
-                file.write("class='cell output' ")
-            else:
-                file.write("class='cell' ")
-            file.write("/>\n")
-    file.write("</g>")
-    for i in range(len(init)):
-        file.write(f'''<g class=robot id=r{i} \
+        for i in range(map_.n):
+            for j in range(map_.m):
+                file.write(f'<rect x={j*(MOVE)}px y={i*(MOVE)}px ')
+                if not map_.has(Position(i, j)):
+                    file.write("class='cell wall' ")
+                elif map_[i, j].input_id is not None:
+                    file.write("class='cell input' ")
+                elif map_[i, j].output_id is not None:
+                    file.write("class='cell output' ")
+                else:
+                    file.write("class='cell' ")
+                file.write("/>\n")
+        file.write("</g>")
+        for i in range(len(init)):
+            file.write(f'''<g class=robot id=r{i} \
 transform="translate({init[i][1]*MOVE + CELL_SIZE/2}, \
 {init[i][0]*MOVE + CELL_SIZE/2})\
 rotate({-90*init[i][2]})" mail={'true' if init[i][3] else 'false'}>
@@ -77,8 +76,6 @@ rotate({-90*init[i][2]})" mail={'true' if init[i][3] else 'false'}>
     <rect width=3 height=8 x=-14 y=2 />
     <rect width=3 height=8 x=11 y=2 />
     </g>\n''')
-    file.write("</g></svg>")
-    file.write(f"<script>data={json.dumps(data)};CELL_SIZE={CELL_SIZE};CELL_SPACE={CELL_SPACE};MOVE={MOVE};SPEED={SPEED}</script>")
-    file.write("<script>" + open("vis.js").read() + "</script>")
-    
-            
+        file.write("</g></svg>")
+        file.write(f"<script>data={json.dumps(data)};CELL_SIZE={CELL_SIZE};CELL_SPACE={CELL_SPACE};MOVE={MOVE};SPEED={SPEED}</script>")
+        file.write("<script>" + open("vis.js").read() + "</script>")
