@@ -59,7 +59,7 @@ class Cell:
             self._input = None
         self._output_id = output_id
         self._reserved = False
-        self._requests: list[simpy.Event] = []
+        self._requests: simpy.Event | None = None
         self.position: None | Position = None
 
     def reserve(self) -> simpy.Event:
@@ -67,21 +67,21 @@ class Cell:
             raise NotFreeCellException(self)
         if self._reserved:
             raise CellIsReservedException(self)
-        self._requests.append(self._env.timeout(0))
+        self._requests = self._env.timeout(0)
         self._reserved = True
-        return self._requests[-1]
+        return self._requests
 
     def unreserve(self, request: simpy.Event) -> None:
-        if request != self._requests[-1]:
+        if request != self._requests:
             raise UnknownRequestException(f"{self} got unknown request.")
-        self._requests.pop()
+        self._requests = None
         self._reserved = False
 
     def get_input(self):
         if self._input is None:
             raise NotInputCellException(self)
         return self._input()
-    
+
     @typing.override
     def __repr__(self):
         return f"Cell{self.position}"
@@ -122,5 +122,3 @@ class SafeCell(Cell, simpy.Resource):
         if isinstance(request, simpy.resources.resource.Request):
             request.cancel()
             self.release(request)
-        else:
-            print("unreserved")
