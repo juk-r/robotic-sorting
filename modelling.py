@@ -1,3 +1,4 @@
+import csv
 import simpy
 import math
 import json
@@ -6,7 +7,7 @@ import time
 
 if typing.TYPE_CHECKING:
     from brains import Brain
-    from structures import Map, Position, Direction
+    from structures import Map, Position, Direction, Mail
     from robot import Robot
     from typing import Any
 
@@ -28,6 +29,7 @@ class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
         self._now: int
         super().__init__()
         self.robots = []
+        self.writer = None
 
     def set_map(self, map: MapT): # type: ignore
         self.map = map
@@ -52,6 +54,33 @@ class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
         std = math.sqrt(sum((i-average)**2 for i in results)/(count-1))
         print(average, std)
         return average, std
+
+    def record_actions(self, mail_count: int, file_name: str):
+        file = open(file_name, 'w', newline='')
+        self.writer = csv.writer(file)
+        self.writer.writerow((
+            "time", "robot", "x", "y", "direction", "mail", "action",
+            "new x", "new y", "new direction", "new mail"))
+        while (self.brain.count < mail_count):
+            self.run(self._now + 1)
+        file.close()
+
+    def record_action(self, robot: "Robot[Any]",
+                     current_position: "Position",
+                     current_direction: "Direction",
+                     current_mail: "Mail | None",
+                     action: "Robot.Action",
+                     expected_position: "Position",
+                     expected_direction: "Direction",
+                     expected_mail: "Mail | None"):
+        if self.writer:
+            self.writer.writerow((
+                self._now, robot.id,
+                current_position.x, current_position.y, current_direction.name,
+                None if current_mail is None else current_mail.destination,
+                action.name,
+                expected_position.x, expected_position.y, expected_direction.name,
+                None if expected_mail is None else expected_mail.destination))
 
     def record(self, time_: int, file_name: str = 'record.json'):
         """

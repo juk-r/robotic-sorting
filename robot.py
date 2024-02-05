@@ -98,6 +98,9 @@ class Robot(typing.Generic[CellT]):
         next_position = self._position.get_next_on(self._direction)
         request = self._model.map[next_position].reserve()
         yield request
+        self._model.record_action(
+            self, self._position, self._direction, self._mail, Robot.Action.move,
+            next_position, self._direction, self._mail)
         logging.info(f"{self} is moving to {next_position}.")
         yield self._model.timeout(self._type.time_to_move)
         self._model.map[self._position].unreserve(self._cell_request)
@@ -112,6 +115,9 @@ class Robot(typing.Generic[CellT]):
             self._model.map[self._position].get_input())
         if self._aborted:
             return
+        self._model.record_action(
+            self, self._position, self._direction, None, Robot.Action.take,
+            self._position, self._direction, mail)
         logging.info(f"{self} is taking {self._mail}.")
         yield self._model.timeout(self._type.time_to_take)
         self._mail = mail
@@ -121,11 +127,17 @@ class Robot(typing.Generic[CellT]):
             raise RobotWithoutMailException(self)
         if self._model.map[self.position].output_id != self._mail.destination:
             raise IncorrectOutputException(self._mail, self._model.map[self.position])
+        self._model.record_action(
+            self, self._position, self._direction, self._mail, Robot.Action.put,
+            self._position, self._direction, None)
         logging.info(f"{self} is putting {self._mail}.")
         yield self._model.timeout(self._type.time_to_put)
         self._mail = None
 
     def _turn(self, new_direction: Direction):
+        self._model.record_action(
+            self, self._position, self._direction, self._mail, Robot.Action.turn_to(new_direction),
+            self._position, new_direction, self._mail)
         logging.info(f"{self} is turning to {new_direction}.")
         yield self._model.timeout(Direction.turn_count(self._direction, new_direction)\
                           * self._type.time_to_turn)
