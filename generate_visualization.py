@@ -4,7 +4,7 @@ from cell import Cell
 
 CELL_SIZE = 30
 CELL_SPACE = 3
-SPEED = 0.3
+SPEED = 0.5
 MOVE = CELL_SIZE + CELL_SPACE
 
 def generate(map_: Map[Cell], record: str, output: str):
@@ -68,9 +68,9 @@ height='''+str(map_.n*(MOVE))+'''px>
         file.write("</g>")
         for i in range(len(init)):
             file.write(f'''<g class=robot id=r{i} \
-transform="translate({init[i][1]*MOVE + CELL_SIZE/2}, \
-{init[i][0]*MOVE + CELL_SIZE/2})\
-rotate({-90*init[i][2]})" mail={'true' if init[i][3] else 'false'}>
+transform="translate({init[i][2]*MOVE + CELL_SIZE/2}, \
+{init[i][1]*MOVE + CELL_SIZE/2})\
+rotate({-90*init[i][3]})" mail={'true' if init[i][4] else 'false'}>
     <rect width=20 height=20 x=-10 y=-10 />
     <rect class=mail width=10 height=10 x=-5 y=-5 />
     <rect width=3 height=8 x=-14 y=2 />

@@ -28,7 +28,7 @@ robots = [];
 rotations = [];
 for (let i = 0; i < data[0].length; i++) {
     robots.push(document.getElementById("r"+i));
-    rotations.push(data[0][i][2]);
+    rotations.push(data[0][i][3]);
 }
 for (let i = 0; i < data.length; i++) {
     setTimeout(update, i*1000*SPEED, i);
