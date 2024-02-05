@@ -57,42 +57,22 @@ In a group of possible solutions it is cheap to compute online for every robot p
     - `OnlineBrain._mail_put` and *put* if robot is on required by mail *output* cell.
 - Brain calls protected methods `OnlineBrain._go_with_mail` and `OnlineBrain._go_without_mail` when *action* is not *obvious*. If they return only *move* and *turn* *action*s only `PositionOutOfMapException` can be raised.
 
-### Precompute moving direction from every cell to every *input* and *output* cells
-[`DirectionBrain`](brains/direction_brain.py), description...
+### Precompute direction
+It is possible to orientate each edge between neighbors cell so that no cycle with length less than number of robot exists, and the map is strongly connected (or except some *empty* cells).
+For each cell and each *input* and *output* cell define direction so that if robot goes to that direction, it will be eventually in corresponding *input* and *output* cell.
+Give *take* and *pup* actions if no conflicts occur, give *turn* action if defined direction is other than current, give *move* action as soon as no conflicts will occur.
 
-### Sequentially find minimum path in State*Time space
-[`PathBrain`](brains/path_brain.py), description...
+Algorithm is implemented as [`DirectionBrain`](brains/direction_brain.py).
+
+### Sequentially find path
+A Map has special *rest* cells as many as robots so that the map without all of *rest* cells is connected and each *rest* cell is connected to non *rest*.
+Assign each robot to one *rest* cell and assume that at the start, they stay on the corresponding cell.
+For each cell, non intersecting intervals (start and end time) are stored, that corresponds to time when robots will occupy that cell. For each robot future path is stored. At the start for each *rest* cell add intervals from zero to infinity.
+At the start time sequentially for each robot find nonintersecting path in space\*time space (using Dijkstra or A* algorithms) from current position to *input* cell and then to its *rest* cell, store found path and for each cell in path add interval (from time when robot will start moving to that cell to time when robot will end moving from that cell, for the *rest* cell add interval until infinity).
+When robot takes or puts mail, clear its path and delete all corresponding intervals, find and add in the same way new path from current position to *input* or *output* cell and then to robot's *rest* cell.
+The Algorithms guarantees that required path always exists since path to its rest place exists as it was not previously intersected, on its *rest* cell robot can stay any time until all other robots will reach their *rest* cells, then robot can find path to destination as the map without *rest* cells (the only with intervals) is connected.
+
+Algorithm is implemented as [`PathBrain`](brains/path_brain.py).Al
 
 ### Ant colony optimization algorithm
 [`AntBrain`](brains/ant_brain.py), description...
-
-Examples
---------
-### [Example 1](examples/random_direction_on_small.py) 
-generates random marking for a map 3x3 and choses best. Result, where `+` is input, `-` is output:
-```
-BEST: 10.04 seconds per mail
-|+|→| |←|+|
- ↑   ↓   ↑
-| |←| |←| |
- ↓   ↓   ↑
-|-|→| |→|-|
-```
-
-### [Example 2](examples/ant_on_small.py)
-simple ant brain, same map. Result:
-```
-...
-40 1829
-41 1751
-42 1771
-43 1843
-44 1728
-45 1762
-46 1873
-47 1735
-48 1811
-49 1873
-50 1733
-average: 16.866250632484398 seconds per mail
-```
