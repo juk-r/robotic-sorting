@@ -51,8 +51,8 @@ for n in range(100):
     for i in range(3):
         model.add_robot(SafeRobot(model, robot_type, Position(0, i), Direction.down, 1))
     model.run(TEST_TIME)
-    if model.brain.count > max_:
-        max_ = model.brain.count
+    if model.delivered_mails > max_:
+        max_ = model.delivered_mails
         best_map = way_map
 
 print(f"BEST: {TEST_TIME/max_} seconds per mail")

@@ -30,5 +30,5 @@ for i, robot in enumerate(robots):
     model.add_robot(robot)
 
 model.record(1000)
-print(model.brain.count)
+print(model.delivered_mails)
 model.test(1000, 10)

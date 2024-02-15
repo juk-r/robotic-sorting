@@ -13,14 +13,8 @@ MapT = typing.TypeVar("MapT", bound = "Map[Cell]", covariant=True)
 
 class Brain(abc.ABC, typing.Generic[MapT, RobotT]):
     """Abstract class for brain"""
-    @property
-    def count(self):
-        """count of delivered mails"""
-        return self._count
-
     def __init__(self, model: "Model[MapT, typing.Self, RobotT]"):
         self._model = model
-        self._count = 0
 
     @abc.abstractmethod
     def get_next_action(self, robot: RobotT) -> Robot.Action:
@@ -43,7 +37,6 @@ class OnlineBrain(Brain[MapT, SafeRobot]):
         if robot.mail is not None:
             if robot.position == self._model.map.outputs[robot.mail.destination]:
                 self._mail_put(robot)
-                self._count += 1
                 return Robot.Action.put
             return self._go_with_mail(robot, robot.mail.destination)
         else:

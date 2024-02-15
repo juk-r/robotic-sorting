@@ -99,7 +99,6 @@ class PathBrain(Brain[Map[Cell], Robot[Cell]]):
                 and robot.position == self._model.map.outputs[robot.mail.destination]
                 and new_state.start - self._model.now >= self.robot_type.time_to_put):
             self._generate_to_input[robot] = True
-            self._count += 1
             self._current[robot].remove()
             self._current[robot] = self._robots_reserves[robot].popleft()
             return Robot.Action.put

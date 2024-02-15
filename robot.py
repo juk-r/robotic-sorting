@@ -99,7 +99,8 @@ class Robot(typing.Generic[CellT]):
         request = self._model.map[next_position].reserve()
         yield request
         self._model.record_action(
-            self, self._position, self._direction, self._mail, Robot.Action.move,
+            self, self._position, self._direction, self._mail,
+            Robot.Action.move, self._type.time_to_move,
             next_position, self._direction, self._mail)
         logging.info(f"{self} is moving to {next_position}.")
         yield self._model.timeout(self._type.time_to_move)
@@ -116,7 +117,8 @@ class Robot(typing.Generic[CellT]):
         if self._aborted:
             return
         self._model.record_action(
-            self, self._position, self._direction, None, Robot.Action.take,
+            self, self._position, self._direction, None,
+            Robot.Action.take, self._type.time_to_turn,
             self._position, self._direction, mail)
         logging.info(f"{self} is taking {self._mail}.")
         yield self._model.timeout(self._type.time_to_take)
@@ -128,19 +130,21 @@ class Robot(typing.Generic[CellT]):
         if self._model.map[self.position].output_id != self._mail.destination:
             raise IncorrectOutputException(self._mail, self._model.map[self.position])
         self._model.record_action(
-            self, self._position, self._direction, self._mail, Robot.Action.put,
+            self, self._position, self._direction, self._mail,
+            Robot.Action.put, self._type.time_to_put,
             self._position, self._direction, None)
         logging.info(f"{self} is putting {self._mail}.")
         yield self._model.timeout(self._type.time_to_put)
         self._mail = None
 
     def _turn(self, new_direction: Direction):
+        turn_time = Direction.turn_count(self._direction, new_direction) * self._type.time_to_turn
         self._model.record_action(
-            self, self._position, self._direction, self._mail, Robot.Action.turn_to(new_direction),
+            self, self._position, self._direction, self._mail,
+            Robot.Action.turn_to(new_direction), turn_time,
             self._position, new_direction, self._mail)
         logging.info(f"{self} is turning to {new_direction}.")
-        yield self._model.timeout(Direction.turn_count(self._direction, new_direction)\
-                          * self._type.time_to_turn)
+        yield self._model.timeout(turn_time)
         self._direction = new_direction
 
     def _run(self):
@@ -191,6 +195,10 @@ class SafeRobot(Robot["SafeCell"]):
             self._model.map[next_position].unreserve(request)
             return
         logging.info(f"{self} is moving to {next_position}.")
+        self._model.record_action(
+            self, self._position, self.direction, self.mail,
+            Robot.Action.move, self._type.time_to_move,
+            next_position, self.direction, self.mail)
         yield self._model.timeout(self._type.time_to_move)
         self._model.map[self._position].unreserve(self._cell_request)
         self._position = next_position

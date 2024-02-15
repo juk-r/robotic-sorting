@@ -12,7 +12,7 @@ if typing.TYPE_CHECKING:
     from typing import Any
 
 BrainT = typing.TypeVar("BrainT", bound="Brain[Any, Any]", covariant=True)
-RobotT = typing.TypeVar("RobotT", bound="Robot[Any]", covariant=True)
+RobotT = typing.TypeVar("RobotT", bound="Robot[Any]")
 MapT = typing.TypeVar("MapT", bound="Map[Any]", covariant=True)
 
 class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
@@ -25,11 +25,15 @@ class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
     map: MapT
     brain: BrainT
     robots: list[RobotT]
+    @property
+    def delivered_mails(self):
+        return self._delivered_mails
     def __init__(self):
         self._now: int
         super().__init__()
         self.robots = []
         self.writer = None
+        self._delivered_mails = 0
 
     def set_map(self, map: MapT): # type: ignore
         self.map = map
@@ -37,19 +41,27 @@ class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
     def set_brain(self, brain: BrainT):  # type: ignore
         self.brain = brain
 
-    def add_robot(self, robot: RobotT):  # type: ignore
+    def add_robot(self, robot: RobotT):
         self.robots.append(robot)
         self.brain.new_robot(robot)
+
+    def deliver_mail(self, robot: RobotT, mail: "Mail"):
+        # add some validation?
+        self._delivered_mails += 1
+
+    def run_for_mails(self, mail_count: int):
+        while (self._delivered_mails < mail_count):
+            self.run(self._now + 1)
 
     def test(self, time: float, count: int) -> tuple[float, float]:
         """runs `count` times for `time`
         return: average, deviation for delivered mails"""
         results: list[float] = []
-        last_cnt = self.brain.count
+        last_cnt = self._delivered_mails
         for _ in range(count):
             self.run(self.now + time)
-            results.append((self.brain.count - last_cnt))
-            last_cnt = self.brain.count
+            results.append((self._delivered_mails - last_cnt))
+            last_cnt = self._delivered_mails
         average = sum(results)/count
         std = math.sqrt(sum((i-average)**2 for i in results)/(count-1))
         print(average, std)
@@ -59,10 +71,11 @@ class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
         file = open(file_name, 'w', newline='')
         self.writer = csv.writer(file)
         self.writer.writerow((
-            "time", "robot", "x", "y", "direction", "mail", "action",
+            "time", "robot",
+            "x", "y", "direction", "mail",
+            "action", "time to do",
             "new x", "new y", "new direction", "new mail"))
-        while (self.brain.count < mail_count):
-            self.run(self._now + 1)
+        self.run_for_mails(mail_count)
         file.close()
 
     def record_action(self, robot: "Robot[Any]",
@@ -70,6 +83,7 @@ class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
                      current_direction: "Direction",
                      current_mail: "Mail | None",
                      action: "Robot.Action",
+                     time_to_do: int,
                      expected_position: "Position",
                      expected_direction: "Direction",
                      expected_mail: "Mail | None"):
@@ -78,12 +92,13 @@ class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
                 self._now, robot.id,
                 current_position.x, current_position.y, current_direction.name,
                 None if current_mail is None else current_mail.destination,
-                action.name,
+                action.name, time_to_do,
                 expected_position.x, expected_position.y, expected_direction.name,
                 None if expected_mail is None else expected_mail.destination))
 
     def record(self, time_: int, file_name: str = 'record.json'):
         """
+        obsolete use `record_actions`_
         records to `file_name`
         """
         init_pos: list[tuple[int, int, int, int, bool]] = []

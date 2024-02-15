@@ -22,9 +22,9 @@ for i in range(1, 501):
     model.run(model.now+30000)
     model.brain.update()
     if i % 1 == 0:
-        print(i, model.brain.count-last_cnt)
-        last_cnt = model.brain.count
+        print(i, model.delivered_mails-last_cnt)
+        last_cnt = model.delivered_mails
 
 TEST_TIME = 100000
 model.run(model.now+TEST_TIME)
-print(f"average: {TEST_TIME/(model.brain.count-last_cnt)} seconds per mail")
+print(f"average: {TEST_TIME/(model.delivered_mails-last_cnt)} seconds per mail")
