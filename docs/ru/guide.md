@@ -1,12 +1,4 @@
-# Руководство
-
-### Требования
-
-- python 3.12
-- [simpy](https://github.com/esemble/simpy)
-
-## Как использовать
-Различные [примеры](/examples)
+# Как устроены [примеры](/examples)
 1. Импортировать классы:
 ```python
 from modelling import Model
