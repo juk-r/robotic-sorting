@@ -4,10 +4,10 @@ import simpy.resources.store
 import simpy.resources.resource
 
 from exceptions import (
-    NotFreeCellException,
-    NotInputCellException,
-    CellIsReservedException,
-    UnknownRequestException
+    MovedToWall,
+    NotInputCell,
+    RobotCollision,
+    UnknownRequest
 )
 
 if typing.TYPE_CHECKING:
@@ -64,22 +64,22 @@ class Cell:
 
     def reserve(self) -> simpy.Event:
         if not self._free:
-            raise NotFreeCellException(self)
+            raise MovedToWall(self)
         if self._reserved:
-            raise CellIsReservedException(self)
+            raise RobotCollision(self)
         self._requests = self._env.timeout(0)
         self._reserved = True
         return self._requests
 
     def unreserve(self, request: simpy.Event) -> None:
         if request != self._requests:
-            raise UnknownRequestException(f"{self} got unknown request.")
+            raise UnknownRequest(f"{self} got unknown request.")
         self._requests = None
         self._reserved = False
 
     def get_input(self):
         if self._input is None:
-            raise NotInputCellException(self)
+            raise NotInputCell(self)
         return self._input()
 
     @typing.override
@@ -114,7 +114,7 @@ class SafeCell(Cell, simpy.Resource):
     @typing.override
     def reserve(self) -> simpy.Event:
         if not self._free:
-            raise NotFreeCellException(self)
+            raise MovedToWall(self)
         return simpy.Resource.request(self)
 
     @typing.override

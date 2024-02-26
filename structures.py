@@ -2,7 +2,7 @@ import dataclasses
 import enum
 import typing
 
-from exceptions import PositionOutOfMapException, NotRectangleMapException
+from exceptions import PositionOutOfMap, NotRectangleMap
 from cell import Cell
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -84,15 +84,15 @@ class Map(typing.Generic[TCell]):
         self._map = map_
         self._n = len(map_)
         if self._n == 0:
-            raise NotRectangleMapException()
+            raise NotRectangleMap()
         self._m = len(map_[0])
         if self._m == 0:
-            raise NotRectangleMapException()
+            raise NotRectangleMap()
         self._inputs: dict[int, Position] = {}
         self._outputs: dict[int, Position] = {}
         for x, line in enumerate(self._map):
             if len(line) != self._m:
-                raise NotRectangleMapException()
+                raise NotRectangleMap()
             for y, cell in enumerate(line):
                 cell.position = Position(x, y)
                 if cell.input_id is not None:
@@ -116,7 +116,7 @@ class Map(typing.Generic[TCell]):
         if isinstance(position, tuple):
             position = Position(position[0], position[1])
         if not self.has(position):
-            raise PositionOutOfMapException(position)
+            raise PositionOutOfMap(position)
         return self._map[position.x][position.y]
 
     def __iter__(self) -> typing.Iterator[Position]:

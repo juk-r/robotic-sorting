@@ -4,7 +4,7 @@ import simpy
 import typing
 
 from structures import Position, Direction, Mail, RobotType
-from exceptions import RobotWithoutMailException, RobotWithMailException, IncorrectOutputException
+from exceptions import MailToPutAbsence, DoubleMailTake, IncorrectOutput
 
 if typing.TYPE_CHECKING:
     from brains import Brain, OnlineBrain
@@ -110,7 +110,7 @@ class Robot(typing.Generic[CellT]):
 
     def _take(self) -> typing.Generator[simpy.Event, Mail, None]:
         if self._mail is not None:
-            raise RobotWithMailException(self)
+            raise DoubleMailTake(self)
         logging.info(f"{self} is waiting for mail.")
         mail = yield self._new_abortable_event(
             self._model.map[self._position].get_input())
@@ -126,9 +126,9 @@ class Robot(typing.Generic[CellT]):
 
     def _put(self):
         if self._mail is None:
-            raise RobotWithoutMailException(self)
+            raise MailToPutAbsence(self)
         if self._model.map[self.position].output_id != self._mail.destination:
-            raise IncorrectOutputException(self._mail, self._model.map[self.position])
+            raise IncorrectOutput(self._mail, self._model.map[self.position])
         self._model.record_action(
             self, self._position, self._direction, self._mail,
             Robot.Action.put, self._type.time_to_put,

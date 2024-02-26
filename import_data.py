@@ -8,7 +8,7 @@ from structures import Map, Direction
 from cell import SafeCell, MailInputGetter, Cell
 from robot import RobotType, SafeRobot
 from brains import OnlineBrain
-from exceptions import DataImportException
+from exceptions import InvalidDataFormat
 from typing import Any
 from modelling import Model
 
@@ -50,7 +50,7 @@ def import_map(env: simpy.Environment,
 
 def import_str_position(position: str, n: int) -> tuple[int, int]:
     if len(position) != 2:
-        raise DataImportException(f"Invalid position: {position}")
+        raise InvalidDataFormat(f"Invalid position: {position}")
     return (n-int(position[1]), "abcdefghi".find(position[0]))
 
 def import_map_csv(env: simpy.Environment,
@@ -78,7 +78,7 @@ def import_map_csv(env: simpy.Environment,
                 case "T":
                     inputs[import_str_position(row[1], n)] = int(row[2])
                 case other:
-                    raise DataImportException(
+                    raise InvalidDataFormat(
                         f"Invalid map details, expected Y or T, got {other}")
         for i, row in enumerate(map_reader):
             cells.append([])
@@ -93,7 +93,7 @@ def import_map_csv(env: simpy.Environment,
                     case "Y":
                         cells[i].append(SafeCell(env, output_id=outputs[i,j]))
                     case other:
-                        raise DataImportException(
+                        raise InvalidDataFormat(
                             f"Invalid map, expected G, R, T or Y, got {other}")
     return Map(cells)
 

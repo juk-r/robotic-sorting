@@ -8,48 +8,52 @@ if typing.TYPE_CHECKING:
 class ModellingException(BaseException):
     pass
 
-class NotFreeCellException(ModellingException):
+class MovedToWall(ModellingException):
     def __init__(self, cell: "Cell"):
         super().__init__(f"{cell} is not free.")
 
 
-class NotInputCellException(ModellingException):
+class NotInputCell(ModellingException):
     def __init__(self, cell: "Cell"):
         super().__init__(f"{cell} is not an input.")
 
 
-class CellIsReservedException(ModellingException):
+class RobotCollision(ModellingException):
     def __init__(self, cell: "Cell"):
         super().__init__(f"{cell} is reserved.")
 
 
-class UnknownRequestException(ModellingException):
+class UnknownRequest(ModellingException):
+    """
+    internal, may be caused by
+    wrong request handling by robots
+    """
     pass
 
 
-class RobotWithMailException(ModellingException):
+class DoubleMailTake(ModellingException):
     def __init__(self, robot: "Robot[typing.Any]"):
         super().__init__(f"{robot} already has a mail.")
 
 
-class RobotWithoutMailException(ModellingException):
+class MailToPutAbsence(ModellingException):
     def __init__(self, robot: "Robot[typing.Any]"):
         super().__init__(f"{robot} does not have a mail to put.")
 
 
-class IncorrectOutputException(ModellingException):
+class IncorrectOutput(ModellingException):
     def __init__(self, mail: "Mail", cell: "Cell"):
         super().__init__(f"{cell} is not correct output for {mail}, expected {mail.destination}")
 
 
-class PositionOutOfMapException(ModellingException):
+class PositionOutOfMap(ModellingException):
     def __init__(self, position: "Position"):
         super().__init__(f"{position} is out of map.")
 
-class NotRectangleMapException(ModellingException):
+class NotRectangleMap(ModellingException):
     def __init__(self):
         super().__init__("Map is not a rectangle.")
 
 
-class DataImportException(BaseException):
+class InvalidDataFormat(BaseException):
     pass
