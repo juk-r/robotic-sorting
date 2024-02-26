@@ -25,4 +25,5 @@ model.set_brain(DirectionBrain(model))
 for i in range(3):
     model.add_robot(SafeRobot(model, robot_type, Position(0, i), Direction.down, 1))
 model.add_robot(SafeRobot(model, robot_type, Position(1, 1), Direction.down, 1))
-model.test(2000, 30)
+model.run(100)
+print(f"{model.deliver_mail = }")
