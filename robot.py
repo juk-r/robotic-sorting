@@ -135,6 +135,7 @@ class Robot(typing.Generic[CellT]):
             self._position, self._direction, None)
         logging.info(f"{self} is putting {self._mail}.")
         yield self._model.timeout(self._type.time_to_put)
+        self._model.deliver_mail(self, self._mail)
         self._mail = None
 
     def _turn(self, new_direction: Direction):
