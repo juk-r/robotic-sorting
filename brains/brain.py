@@ -2,6 +2,7 @@ import abc
 import typing
 
 from robot import Robot, SafeRobot
+from exceptions import RobotCollision
 
 if typing.TYPE_CHECKING:
     from modelling import Model
@@ -19,6 +20,10 @@ class Brain(abc.ABC, typing.Generic[MapT, RobotT]):
     @abc.abstractmethod
     def get_next_action(self, robot: RobotT) -> Robot.Action:
         """Called by robot"""
+    
+    def next_action_on_collision(self, robot: RobotT) -> Robot.Action:
+        """Callback if previous given action causes collision"""
+        raise RobotCollision(self._model.map[robot.position])
 
     @abc.abstractmethod
     def new_robot(self, robot: RobotT) -> None:

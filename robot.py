@@ -70,6 +70,7 @@ class Robot(typing.Generic[CellT]):
         self._event: simpy.Event = model.event()
         self._aborted = False
         self.timeout = False
+        self._collision_callback = False
 
     def _new_abortable_event(self, event: simpy.Event | None = None):
         def cancel_event(evt: simpy.Event):
@@ -96,6 +97,9 @@ class Robot(typing.Generic[CellT]):
 
     def _move(self) -> typing.Generator[simpy.Event, bool, None]:
         next_position = self._position.get_next_on(self._direction)
+        if (self._model.map[next_position].reserved):
+            self._collision_callback = True
+            return
         request = self._model.map[next_position].reserve()
         yield request
         self._model.record_action(
@@ -151,7 +155,12 @@ class Robot(typing.Generic[CellT]):
     def _run(self):
         yield self._cell_request
         while True:
-            match self._model.brain.get_next_action(self):
+            if self._collision_callback:
+                action = self._model.brain.next_action_on_collision(self)
+                self._collision_callback = False
+            else:
+                action = self._model.brain.get_next_action(self)
+            match action:
                 case Robot.Action.idle:
                     yield self._model.process(self._idle())
                 case Robot.Action.move:
@@ -161,8 +170,8 @@ class Robot(typing.Generic[CellT]):
                 case Robot.Action.put:
                     yield self._model.process(self._put())
                 case Robot.Action.turn_to_up | Robot.Action.turn_to_left\
-                        | Robot.Action.turn_to_down | Robot.Action.turn_to_right as turn:
-                    yield self._model.process(self._turn(Direction(turn.value-10)))
+                        | Robot.Action.turn_to_down | Robot.Action.turn_to_right:
+                    yield self._model.process(self._turn(Direction(action.value-10)))
     
     @typing.override
     def __repr__(self):
