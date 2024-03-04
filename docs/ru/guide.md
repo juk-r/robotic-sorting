@@ -2,7 +2,7 @@
 1. Импортировать классы:
 ```python
 from modelling import Model
-from import_data impoty import_json, import_map
+from import_data impoty import_json, import_map, import_distribution
 from structures import Direction, Position
 from robot import Robot, RobotType
 ```
@@ -10,21 +10,17 @@ from robot import Robot, RobotType
 ```python
 from brains import chosen_brain # <нужный класс>
 ```
-3. Импортировать нужный тип генерации направлений для грузов:
-```python
-from mail_factories import chosen_factory # <нужный класс>
-```
 4. Создать модель
 ```python
 model = Model()
 ```
 5. Создать генератор направлений
 ```python
-factory = chosen_factory(...)
+factory = import_distribution(model, import_json('path/to/distribution.json'))
 ```
 6. Задать карту через json
 ```python
-model.set_map(import_map(model, import_json('path/to.json', factory))[0])
+model.set_map(import_map(model, import_json('path/to/map.json', factory))[0])
 ```
 или csv
 ```python

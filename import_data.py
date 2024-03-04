@@ -1,5 +1,6 @@
 import csv
 import json
+import random
 import simpy
 import simpy.resources.store
 import typing
@@ -11,6 +12,7 @@ from brains import OnlineBrain
 from exceptions import InvalidDataFormat
 from typing import Any
 from modelling import Model
+from mail_factories import RandomAlwaysReadyMail
 
 CellT = typing.TypeVar("CellT", bound=Cell)
 
@@ -138,3 +140,10 @@ def import_probabilities(file_name: str) -> dict[int, float]:
         for row in csv.reader(file, delimiter=' '):
             result[int(row[0])] = float(row[1])
     return result
+
+def import_distribution(env: simpy.Environment, data: dict[str, typing.Any]
+                        ) -> RandomAlwaysReadyMail:
+    dest = list(map(int, data["distribution"].keys()))
+    prob = list(data["distribution"].values())
+    return RandomAlwaysReadyMail(env, 
+        lambda: random.choices(dest, prob)[0])

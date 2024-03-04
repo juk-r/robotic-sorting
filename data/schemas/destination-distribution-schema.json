@@ -1,0 +1,21 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "distribution" : {
+            "type": "object",
+            "description": "pairs of output id and probability, e.g. \"1\": 0.5",
+            "propertyNames": {
+                "pattern": "\\d+"
+            },
+            "patternProperties": {
+                "\\d+": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                }
+            }
+        }
+    },
+    "required": ["distribution"]
+}
