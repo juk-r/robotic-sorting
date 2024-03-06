@@ -99,10 +99,9 @@ def import_map_csv(env: simpy.Environment,
                             f"Invalid map, expected G, R, T or Y, got {other}")
     return Map(cells)
 
-def import_robot_type(data: dict[str, typing.Any], 
-                      span: float) -> RobotType:
-    return RobotType(span/data['speed'], data['timeToTurn'], 
-                     data['TimeToPut'], data['TimeToTake'])
+def import_robot_type(data: dict[str, typing.Any]) -> RobotType:
+    return RobotType(data['timeToMove'], data['timeToTurn'], 
+                     data['timeToPut'], data['timeToTake'])
 
 def import_direction(direction: str):
     match direction:
@@ -113,9 +112,10 @@ def import_direction(direction: str):
         case _: raise ValueError(f"{direction} is not direction")
 
 def import_robot(env: Model[Any, Any, Any],
-                 data: dict[str, typing.Any], 
-                 span: float) -> SafeRobot:
-    return SafeRobot(env, import_robot_type(data, span), 
+                 data: dict[str, typing.Any],
+                 type: RobotType,
+                 ) -> SafeRobot:
+    return SafeRobot(env, type,
                  data['position'], data['direction'])
 
 def import_state(env: simpy.Environment, 

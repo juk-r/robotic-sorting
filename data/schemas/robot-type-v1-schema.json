@@ -2,34 +2,29 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "type": "object",
     "properties": {
-        "typeName": {
-            "description": "Name of this type of robots to use in other files",
-            "type": "string"
-        },
-        "speed": {
-            "description": "Speed in meter per second",
-            "type": "number",
+        "timeToMove": {
+            "description": "Time in seconds required to move for one cell",
+            "type": "integer",
             "exclusiveMinimum": 0
         },
         "timeToTurn": {
             "description": "Time in seconds required to turn by 90 degrees",
-            "type": "number",
+            "type": "integer",
             "minimum": 0
         },
         "timeToPut": {
             "description": "Time in seconds required to put mail",
-            "type": "number",
+            "type": "integer",
             "minimum": 0
         },
         "timeToTake": {
             "description": "Time in seconds required to take mail",
-            "type": "number",
+            "type": "integer",
             "minimum": 0
         }
     },
     "required": [
-        "typeName",
-        "speed", 
+        "timeToMove", 
         "timeToTurn", 
         "timeToPut", 
         "timeToTake"

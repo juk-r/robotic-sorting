@@ -1,7 +1,7 @@
 from maps import OneWayMap, DirectionMap
-from import_data import import_safe_map, import_json, import_distribution
+from import_data import import_safe_map, import_json, import_distribution, import_robot_type
 from structures import Direction, Position
-from robot import SafeRobot, RobotType
+from robot import SafeRobot
 from brains.direction_brain import DirectionBrain
 from modelling import Model
 
@@ -19,7 +19,7 @@ way_map = OneWayMap(
      [b, f, f]]
     )
 model.set_map(DirectionMap.generate_shortest(way_map))
-robot_type = RobotType(1, 1, 1, 1)
+robot_type = import_robot_type(import_json("data\\example\\robot-type.json"))
 model.set_brain(DirectionBrain(model))
 for i in range(3):
     model.add_robot(SafeRobot(model, robot_type, Position(0, i), Direction.down, 1))

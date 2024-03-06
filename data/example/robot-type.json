@@ -1,0 +1,7 @@
+{
+    "$schema": "../schemas/robot-type-v1-schema.json",
+    "timeToMove": 1,
+    "timeToTurn": 1,
+    "timeToTake": 1,
+    "timeToPut": 1
+}
