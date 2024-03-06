@@ -1,5 +1,11 @@
 from maps import OneWayMap, DirectionMap
-from import_data import import_safe_map, import_json, import_distribution, import_robot_type
+from import_data import (
+    import_safe_map,
+    import_json,
+    import_distribution,
+    import_robot_type,
+    import_safe_robots
+)
 from structures import Direction, Position
 from robot import SafeRobot
 from brains.direction_brain import DirectionBrain
@@ -21,8 +27,8 @@ way_map = OneWayMap(
 model.set_map(DirectionMap.generate_shortest(way_map))
 robot_type = import_robot_type(import_json("data\\example\\robot-type.json"))
 model.set_brain(DirectionBrain(model))
-for i in range(3):
-    model.add_robot(SafeRobot(model, robot_type, Position(0, i), Direction.down, 1))
+model.add_robots(import_safe_robots(model, import_json("data\\example\\position.json"), robot_type))
+
 model.add_robot(SafeRobot(model, robot_type, Position(1, 1), Direction.down, 1))
 model.run(100)
 print(f"{model.delivered_mails = }")

@@ -1,0 +1,20 @@
+{
+    "$schema": "../schemas/position-schema.json",
+    "robots": [
+        {
+            "x": 0,
+            "y": 0,
+            "direction": "down"
+        },
+        {
+            "x": 0,
+            "y": 1,
+            "direction": "right"
+        },
+        {
+            "x": 2,
+            "y": 2,
+            "direction": "up"
+        }
+    ]
+}

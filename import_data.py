@@ -5,9 +5,9 @@ import simpy
 import simpy.resources.store
 import typing
 
-from structures import Map, Direction
+from structures import Map, Direction, Position
 from cell import SafeCell, MailInputGetter, Cell
-from robot import RobotType, SafeRobot
+from robot import RobotType, Robot, SafeRobot
 from brains import OnlineBrain
 from exceptions import InvalidDataFormat
 from typing import Any
@@ -15,6 +15,7 @@ from modelling import Model
 from mail_factories import RandomAlwaysReadyMail
 
 CellT = typing.TypeVar("CellT", bound=Cell)
+RobotT = typing.TypeVar("RobotT", bound=Robot[Cell])
 
 def import_json(file_path: str):
     """short of `json.loads(open(file_path).read())`"""
@@ -114,9 +115,21 @@ def import_direction(direction: str):
 def import_robot(env: Model[Any, Any, Any],
                  data: dict[str, typing.Any],
                  type: RobotType,
-                 ) -> SafeRobot:
-    return SafeRobot(env, type,
-                 data['position'], data['direction'])
+                 Type: type[RobotT]
+                 ) -> RobotT:
+    return Type(env, type, Position(data['x'], data['y']), import_direction(data['direction']))
+
+def import_robots(env: Model[Any, Any, Any],
+                 data: dict[str, typing.Any],
+                 type: RobotType,
+                 ) -> list[Robot[Cell]]:
+    return [import_robot(env, robot, type, Robot[Cell]) for robot in data["robots"]]
+
+def import_safe_robots(env: Model[Any, Any, Any],
+                 data: dict[str, typing.Any],
+                 type: RobotType,
+                 ) -> list[SafeRobot]:
+    return [import_robot(env, robot, type, SafeRobot) for robot in data["robots"]]
 
 def import_state(env: simpy.Environment, 
                  data: dict[str, typing.Any], 

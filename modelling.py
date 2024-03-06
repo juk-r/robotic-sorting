@@ -45,6 +45,10 @@ class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
         self.robots.append(robot)
         self.brain.new_robot(robot)
 
+    def add_robots(self, robots: list[RobotT]):
+        for robot in robots:
+            self.add_robot(robot)
+
     def deliver_mail(self, robot: RobotT, mail: "Mail"):
         # add some validation?
         self._delivered_mails += 1
