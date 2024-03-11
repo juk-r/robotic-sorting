@@ -6,6 +6,7 @@ import typing
 import time
 
 if typing.TYPE_CHECKING:
+    import io
     from brains import Brain
     from structures import Map, Position, Direction, Mail
     from robot import Robot
@@ -68,19 +69,25 @@ class Model(simpy.Environment, typing.Generic[MapT,  BrainT, RobotT]):
             last_cnt = self._delivered_mails
         average = sum(results)/count
         std = math.sqrt(sum((i-average)**2 for i in results)/(count-1))
-        print(average, std)
         return average, std
 
-    def record_actions(self, mail_count: int, file_name: str):
-        file = open(file_name, 'w', newline='')
-        self.writer = csv.writer(file)
+    def _write_record_header(self):
+        if self.writer is None: return
         self.writer.writerow((
             "time", "robot",
             "x", "y", "direction", "mail",
             "action", "time to do",
             "new x", "new y", "new direction", "new mail"))
+
+    def record_actions_for_mails(self, mail_count: int, file: "io.TextIOWrapper"):
+        self.writer = csv.writer(file)
+        self._write_record_header()
         self.run_for_mails(mail_count)
-        file.close()
+
+    def record_actions_for_time(self, time: int, file: "io.TextIOWrapper"):
+        self.writer = csv.writer(file)
+        self._write_record_header()
+        self.run(self.now + time)
 
     def record_action(self, robot: "Robot[Any]",
                      current_position: "Position",
