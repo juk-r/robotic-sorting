@@ -29,6 +29,5 @@ robot_type = import_robot_type(import_json("data\\example\\robot-type.json"))
 model.set_brain(DirectionBrain(model))
 model.add_robots(import_safe_robots(model, import_json("data\\example\\position.json"), robot_type))
 
-model.add_robot(SafeRobot(model, robot_type, Position(1, 1), Direction.down, 1))
 model.run(100)
 print(f"{model.delivered_mails = }")
