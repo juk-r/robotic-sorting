@@ -21,7 +21,7 @@ class Brain(abc.ABC, typing.Generic[MapT, RobotT]):
     def get_next_action(self, robot: RobotT) -> Robot.Action:
         """Called by robot"""
     
-    def next_action_on_collision(self, robot: RobotT) -> Robot.Action:
+    def collision_callback(self, robot: RobotT) -> None:
         """Callback if previous given action causes collision"""
         raise RobotCollision(self._model.map[robot.position])
 

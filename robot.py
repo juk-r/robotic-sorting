@@ -156,11 +156,9 @@ class Robot(typing.Generic[CellT]):
         yield self._cell_request
         while True:
             if self._collision_callback:
-                action = self._model.brain.next_action_on_collision(self)
+                self._model.brain.collision_callback(self)
                 self._collision_callback = False
-            else:
-                action = self._model.brain.get_next_action(self)
-            match action:
+            match action := self._model.brain.get_next_action(self):
                 case Robot.Action.idle:
                     yield self._model.process(self._idle())
                 case Robot.Action.move:
