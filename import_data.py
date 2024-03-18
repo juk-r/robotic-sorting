@@ -47,9 +47,9 @@ def import_map_stations(data: dict[str, typing.Any]) -> tuple[list[int], list[in
     outputs: list[int] = []
     for line in data['cells']:
         for cell in line:
-            if cell["inputId"] is not None:
+            if "inputId" in cell:
                 inputs.append(cell["inputId"])
-            if cell["outputId"] is not None:
+            if "outputId" in cell:
                 outputs.append(cell["outputId"])
     return inputs, outputs
 
