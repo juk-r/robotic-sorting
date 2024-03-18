@@ -4,18 +4,32 @@
     "properties": {
         "distribution" : {
             "type": "object",
-            "description": "pairs of output id and probability, e.g. \"1\": 0.5",
+            "description": "keys: InputIs, values: probability distribution",
             "propertyNames": {
-                "pattern": "\\d+"
+                "pattern": "\\d+|other"
             },
             "patternProperties": {
-                "\\d+": {
+                "\\d+|other": {
+                    "$ref": "#/$defs/distribution"
+                }
+            }
+        }
+    },
+    "required": ["distribution"],
+    "$defs": {
+        "distribution": {
+            "description": "probability distribution, key: OutputId, value: probability",
+            "type": "object",
+            "propertyNames": {
+                "pattern": "\\d+|other"
+            },
+            "patternProperties": {
+                "\\d+|other": {
                     "type": "number",
                     "minimum": 0,
                     "maximum": 1
                 }
             }
         }
-    },
-    "required": ["distribution"]
+    }
 }

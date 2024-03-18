@@ -67,7 +67,8 @@ if len(brains) > 1:
 
 # import
 model = Model()
-factory = import_distribution(model, json.load(args.distribution))
+factory = import_distributions(model, json.load(args.distribution), *import_map_stations(json.load(args.map)))
+args.map.seek(0)
 map_ = import_map(model, json.load(args.map), factory)[0]
 model.set_map(map_)
 robot_type = import_robot_type(json.load(args.type))

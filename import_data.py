@@ -41,6 +41,18 @@ def import_safe_map(env: simpy.Environment,
         for line in data['cells']
         ]), data['span']
 
+def import_map_stations(data: dict[str, typing.Any]) -> tuple[list[int], list[int]]:
+    "return: two lists of stations - (inputs, outputs)"
+    inputs: list[int] = []
+    outputs: list[int] = []
+    for line in data['cells']:
+        for cell in line:
+            if cell["inputId"] is not None:
+                inputs.append(cell["inputId"])
+            if cell["outputId"] is not None:
+                outputs.append(cell["outputId"])
+    return inputs, outputs
+
 def import_map(env: simpy.Environment,
                data: dict[str, typing.Any], 
                get_mail_input: MailInputGetter
@@ -154,9 +166,30 @@ def import_probabilities(file_name: str) -> dict[int, float]:
             result[int(row[0])] = float(row[1])
     return result
 
-def import_distribution(env: simpy.Environment, data: dict[str, typing.Any]
+def import_distribution(data: dict[str, typing.Any], outputs: list[int]) -> list[float]:
+    result: list[float] = []
+    not_present = sum(str(output) not in data for output in outputs)
+    for output in outputs:
+        if str(output) in data:
+            result.append(data[str(output)])
+        elif 'other' in data:
+            result.append(data['other'] / not_present)
+        else:
+            raise ValueError("not all outputs are present")
+    return result
+
+def import_distributions(env: simpy.Environment, data: dict[str, typing.Any],
+                        inputs: list[int], outputs: list[int],
                         ) -> RandomAlwaysReadyMail:
-    dest = list(map(int, data["distribution"].keys()))
-    prob = list(data["distribution"].values())
-    return RandomAlwaysReadyMail(env, 
-        lambda: random.choices(dest, prob)[0])
+    other_input = None
+    if 'other' in data['distribution']:
+        other_input = import_distribution(data["distribution"]["other"], outputs)
+    result: dict[int, list[float]] = {}
+    for input in inputs:
+        if str(input) in data['distribution']:
+            result[input] = import_distribution(data["distribution"][str(input)], outputs)
+        elif other_input is not None:
+            result[input] = other_input
+        else:
+            raise ValueError("not all inputs are present")
+    return RandomAlwaysReadyMail(env, lambda input: random.choices(outputs, result[input])[0])

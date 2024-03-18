@@ -1,7 +1,0 @@
-{
-    "$schema": "schemas/destination-distribution-schema.json",
-    "distribution": {
-        "0": 0.7,
-        "1": 0.3
-    }
-}
