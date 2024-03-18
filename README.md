@@ -79,6 +79,7 @@ python robotic-sorting -map FILE -type FILE -position FILE -distribution FILE -a
 ### Расположение роботов
 Конфигурация задается файлом `.json`, соответствующим [схеме](/data/schemas/position-schema.json), содержит:
 - `robots` - список, элементы которого содержат:
+    - `id` - необязательный id
     - `x` - позиция по 1 координате, считая с 0
     - `y` - позиция по 2 координате, считая с 0
     - `direction` - направление одно из:
@@ -140,6 +141,7 @@ python robotic-sorting -map FILE -type FILE -position FILE -distribution FILE -a
     - `reserved` (`bool`) - какой-то робот, зарезервировал клетку
 
 О текущем состоянии модели можно узнать из следующих полей роботов (класс [`Robot`](/robot.py#L19)):
+- `config_id` - id заданный в конфигурации или `None`, если не задан
 - `position` - координаты клетки, на которой находится робот
     - `x` (`int`)
     - `y` (`int`)

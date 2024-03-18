@@ -46,6 +46,9 @@ class Robot(typing.Generic[CellT]):
     def id(self):
         return self._id
     @property
+    def config_id(self):
+        return self._config_id
+    @property
     def type(self):
         return self._type
 
@@ -53,6 +56,7 @@ class Robot(typing.Generic[CellT]):
                  type_: RobotType,
                  position: Position,
                  direction: Direction,
+                 config_id: typing.Any = None,
                  ):
         self._id = Robot._last_robot_id
         Robot._last_robot_id += 1
@@ -61,6 +65,7 @@ class Robot(typing.Generic[CellT]):
         self._type = type_
         self._position = position
         self._direction = direction
+        self._config_id = config_id
 
         self._cell_request = model.map[position].reserve()
         self._action = model.process(self._run())

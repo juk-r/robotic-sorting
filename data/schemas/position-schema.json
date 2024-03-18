@@ -7,6 +7,9 @@
             "items": {
                 "type": "object",
                 "properties": {
+                    "id": {
+                        "description": "optional id of robot"
+                    },
                     "x": {
                         "type": "integer",
                         "minimum": 0

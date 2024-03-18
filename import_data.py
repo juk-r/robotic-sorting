@@ -129,7 +129,8 @@ def import_robot(env: Model[Any, Any, Any],
                  type: RobotType,
                  Type: type[RobotT]
                  ) -> RobotT:
-    return Type(env, type, Position(data['x'], data['y']), import_direction(data['direction']))
+    return Type(env, type, Position(data['x'], data['y']), import_direction(data['direction']),
+                None if 'id' not in data else data['id'])
 
 def import_robots(env: Model[Any, Any, Any],
                  data: dict[str, typing.Any],
